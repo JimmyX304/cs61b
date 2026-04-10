@@ -141,9 +141,7 @@ public class Model extends Observable {
                 }
 
                 if (to_move != row) {
-
                     board.move(col, to_move, t);
-
                     changed = true;
                 }
 
