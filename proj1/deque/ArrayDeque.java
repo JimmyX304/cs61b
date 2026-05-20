@@ -38,6 +38,10 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
+        if (size == 0) {
+            return null;
+        }
+        
         T res = items[0];
         for (int i = 0; i < size - 1; i++) {
             items[i] = items[i + 1];
@@ -48,6 +52,10 @@ public class ArrayDeque<T> {
     }
 
     public T removeLast() {
+        if (size == 0) {
+            return null;
+        }
+
         T res = items[size - 1];
         items[size - 1] = null;
         size--;

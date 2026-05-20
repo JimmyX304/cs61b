@@ -87,7 +87,6 @@ public class LinkedListDeque<T> {
     }
 
     public T get(int index) {
-
         if (index >= size) {
             return null;
         }
