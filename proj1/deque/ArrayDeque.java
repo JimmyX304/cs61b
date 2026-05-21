@@ -3,34 +3,42 @@ package deque;
 public class ArrayDeque<T> {
     private T[] items;
     private int size;
+    /** Start is the starting index of the ArrayDeque */
+    int start;
 
     public ArrayDeque() {
         items = (T[]) new Object[8];
         size = 0;
+        start = 2;
     }
 
-    private void resize(int capacity) {
-        T[] a = (T[]) new Object[capacity];
-        System.arraycopy(items, 0, a, 0, size);
+    private void resize() {
+
+        if (isEmpty()) {
+            start = 2;
+            return;
+        }
+
+        T[] a = (T[]) new Object[3 * size];
+        System.arraycopy(items, start, a, size, size);
+        start = size;
         items = a;
     }
 
     public void addFirst(T item) {
-        if (size == items.length) {
-            resize(size * 2);
+        if (start == 0) {
+            resize();
         }
-        for (int i = size; i >= 1; i--) {
-            items[i] = items[i - 1];
-        }
-        items[0] = item;
+        items[start - 1] = item;
+        start--;
         size++;
     }
 
     public void addLast(T item) {
-        if (size == items.length) {
-            resize(size * 2);
+        if (start + size == items.length) {
+            resize();
         }
-        items[size] = item;
+        items[start + size] = item;
         size++;
     }
 
@@ -43,7 +51,7 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        for (int i = 0; i < size; i++) {
+        for (int i = start; i < start + size; i++) {
             System.out.print(items[i] + " ");
         }
         System.out.println();
@@ -54,15 +62,13 @@ public class ArrayDeque<T> {
             return null;
         }
 
-        if (size < items.length / 4 && items.length >= 32) {
-            resize(items.length / 4);
+        if (size < items.length / 2 && size >= 16) {
+            resize();
         }
 
-        T res = items[0];
-        for (int i = 0; i < size - 1; i++) {
-            items[i] = items[i + 1];
-        }
-        items[size - 1] = null;
+        T res = items[start];
+        items[start] = null;
+        start++;
         size--;
         return res;
     }
@@ -72,12 +78,12 @@ public class ArrayDeque<T> {
             return null;
         }
 
-        if (size < items.length / 4 && items.length >= 32) {
-            resize(items.length / 4);
+        if (size < items.length / 2 && size >= 16) {
+            resize();
         }
 
-        T res = items[size - 1];
-        items[size - 1] = null;
+        T res = items[start + size - 1];
+        items[start + size - 1] = null;
         size--;
         return res;
     }
