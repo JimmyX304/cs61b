@@ -24,6 +24,8 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         last = new Node(null, null, null);
         first.next = last;
         last.prev = first;
+        first.next = last;
+        last.prev = first;
         size = 0;
     }
 
@@ -150,6 +152,19 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
             return false;
         }
         if (other.getClass() != this.getClass()) {
+
+            if (other.getClass().getName().equals("ArrayDeque")) {
+                ArrayDeque<T> o = (ArrayDeque<T>) other;
+
+                for (int i = 0; i < size; i++) {
+                    if (!this.get(i).equals(o.get(i))) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             return false;
         }
         LinkedListDeque<T> o = (LinkedListDeque<T>) other;
