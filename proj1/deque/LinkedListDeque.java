@@ -98,7 +98,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
             return null;
         }
 
-        Node p = first;
+        Node p = first.next;
         for (int i = 0; i < index; i++) {
             p = p.next;
         }
