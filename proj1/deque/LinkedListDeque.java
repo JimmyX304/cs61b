@@ -1,6 +1,5 @@
 package deque;
 
-import java.sql.Array;
 import java.util.Iterator;
 
 public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
@@ -156,6 +155,10 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
 
             if (other.getClass().getName().equals("deque.ArrayDeque")) {
                 ArrayDeque<T> o = (ArrayDeque<T>) other;
+
+                if (o.size() != this.size()) {
+                    return false;
+                }
 
                 for (int i = 0; i < size; i++) {
                     if (!this.get(i).equals(o.get(i))) {
