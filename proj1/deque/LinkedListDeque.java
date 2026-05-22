@@ -1,5 +1,6 @@
 package deque;
 
+import java.sql.Array;
 import java.util.Iterator;
 
 public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
@@ -153,7 +154,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         }
         if (other.getClass() != this.getClass()) {
 
-            if (other.getClass().getName().equals("ArrayDeque")) {
+            if (other.getClass().getName().equals("deque.ArrayDeque")) {
                 ArrayDeque<T> o = (ArrayDeque<T>) other;
 
                 for (int i = 0; i < size; i++) {
@@ -204,10 +205,17 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         lld2.addLast(100);
         lld2.addFirst(1801);
 
-        System.out.println(lld.equals(lld2));
-        System.out.println(lld.equals(null));
-        System.out.println(lld.equals("fish"));
-        System.out.println(lld.equals(lld));
+        ArrayDeque<Integer> ad = new ArrayDeque<>();
+        ad.addLast(0);
+        ad.addLast(100);
+        ad.addFirst(1801);
+
+
+        System.out.println(lld.equals(lld2)); // true
+        System.out.println(lld.equals(null)); // false
+        System.out.println(lld.equals("fish")); // false
+        System.out.println(lld.equals(lld)); // true
+        System.out.println(lld.equals(ad)); // true
     }
      */
 }
