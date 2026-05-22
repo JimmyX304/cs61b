@@ -1,6 +1,8 @@
 package deque;
 
-public class LinkedListDeque<T> {
+import java.util.Iterator;
+
+public class LinkedListDeque<T> implements Iterable<T> {
     private static class Node<T> {
         public T item;
         public Node prev;
@@ -112,4 +114,82 @@ public class LinkedListDeque<T> {
         }
         return recurse(first.next, index);
     }
+
+
+    public Iterator<T> iterator() {
+        return new LinkedListIterator();
+    }
+
+    private class LinkedListIterator implements Iterator<T> {
+        private Node wizPos;
+
+        public LinkedListIterator() {
+            wizPos = first.next;
+        }
+
+        public boolean hasNext() {
+            return wizPos != last;
+        }
+
+        public T next() {
+            T returnItem = (T) wizPos.item;
+            wizPos = wizPos.next;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        if (other.getClass() != this.getClass()) {
+            return false;
+        }
+        LinkedListDeque<T> o = (LinkedListDeque<T>) other;
+        if (o.size() != this.size()) {
+            return false;
+        }
+
+        Node n1 = this.first.next;
+        Node n2 = o.first.next;
+
+        for (int i = 0; i < size; i++) {
+            if (!n1.item.equals(n2.item)) {
+                return false;
+            }
+            n1 = n1.next;
+            n2 = n2.next;
+        }
+
+        return true;
+    }
+
+    /** Testing for LinkedListDeque's iterator and equals methods */
+
+    /*
+    public static void main(String[] args) {
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        lld.addLast(0);
+        lld.addLast(100);
+        lld.addFirst(1801);
+
+        for (int i : lld) {
+           System.out.println(i);
+        }
+
+        LinkedListDeque<Integer> lld2 = new LinkedListDeque<>();
+        lld2.addLast(0);
+        lld2.addLast(100);
+        lld2.addFirst(1801);
+
+        System.out.println(lld.equals(lld2));
+        System.out.println(lld.equals(null));
+        System.out.println(lld.equals("fish"));
+        System.out.println(lld.equals(lld));
+    }
+     */
 }

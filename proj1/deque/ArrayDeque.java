@@ -133,7 +133,7 @@ public class ArrayDeque<T> implements Iterable<T> {
         }
 
         for (int i = 0; i < size; i++) {
-            if ((int)this.get(i) != (int)o.get(i)) {
+            if (!this.get(i).equals(o.get(i))) {
                 return false;
             }
         }
@@ -141,7 +141,9 @@ public class ArrayDeque<T> implements Iterable<T> {
         return true;
     }
 
-    /** Testing for ArrayDeque's iterator and equals methods
+    /** Testing for ArrayDeque's iterator and equals methods */
+
+    /*
     public static void main(String[] args) {
         ArrayDeque<Integer> ad = new ArrayDeque<>();
         ad.addLast(0);
