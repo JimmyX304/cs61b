@@ -101,7 +101,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         return (T) p.item;
     }
 
-    public T recurse(Node n, int index) {
+    private T recurse(Node n, int index) {
         if (index == 0) {
             return (T) n.item;
         }

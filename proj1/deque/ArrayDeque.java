@@ -6,7 +6,7 @@ public class ArrayDeque<T> implements Iterable<T> {
     private T[] items;
     private int size;
     /** Start is the starting index of the ArrayDeque */
-    int start;
+    private int start;
 
     public ArrayDeque() {
         items = (T[]) new Object[8];
