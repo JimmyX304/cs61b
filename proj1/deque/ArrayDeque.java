@@ -1,6 +1,8 @@
 package deque;
 
-public class ArrayDeque<T> {
+import java.util.Iterator;
+
+public class ArrayDeque<T> implements Iterable<T> {
     private T[] items;
     private int size;
     /** Start is the starting index of the ArrayDeque */
@@ -89,6 +91,76 @@ public class ArrayDeque<T> {
     }
 
     public T get(int index) {
-        return items[index];
+        return items[start + index];
     }
+
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int wizPos;
+
+        public ArrayDequeIterator() {
+            wizPos = start;
+        }
+
+        public boolean hasNext() {
+            return wizPos < start + size;
+        }
+
+        public T next() {
+            T returnItem = items[wizPos];
+            wizPos++;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        if (other.getClass() != this.getClass()) {
+            return false;
+        }
+        ArrayDeque<T> o = (ArrayDeque<T>) other;
+        if (o.size() != this.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if ((int)this.get(i) != (int)o.get(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** Testing for ArrayDeque's iterator and equals methods
+    public static void main(String[] args) {
+        ArrayDeque<Integer> ad = new ArrayDeque<>();
+        ad.addLast(0);
+        ad.addLast(100);
+        ad.addFirst(1801);
+
+        for (int i : ad) {
+            System.out.println(i);
+        }
+
+        ArrayDeque<Integer> ad2 = new ArrayDeque<>();
+        ad2.addLast(0);
+        ad2.addLast(100);
+        ad2.addFirst(1801);
+
+        System.out.println(ad.equals(ad2));
+        System.out.println(ad.equals(null));
+        System.out.println(ad.equals("fish"));
+        System.out.println(ad.equals(ad));
+    }
+     */
 }
