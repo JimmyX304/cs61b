@@ -4,11 +4,11 @@ import java.util.Iterator;
 
 public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     private static class Node<T> {
-        public T item;
-        public Node prev;
-        public Node next;
+        private T item;
+        private Node prev;
+        private Node next;
 
-        public Node(T i, Node p, Node n) {
+        Node(T i, Node p, Node n) {
             item = i;
             prev = p;
             next = n;
@@ -126,7 +126,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     private class LinkedListIterator implements Iterator<T> {
         private Node wizPos;
 
-        public LinkedListIterator() {
+        LinkedListIterator() {
             wizPos = first.next;
         }
 
