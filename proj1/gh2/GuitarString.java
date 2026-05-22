@@ -17,7 +17,7 @@ public class GuitarString {
 
     /* Create a guitar string of the given frequency.  */
     public GuitarString(double frequency) {
-        size = Math.round((int)(SR / frequency));
+        size = Math.round((int) (SR / frequency));
         for (int i = 0; i < size; i++) {
             buffer.addLast(0.0);
         }
