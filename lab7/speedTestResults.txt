@@ -1,0 +1,4 @@
+On random insertions, my BSTmap had about the same time as Java's built-in TreeMap.
+ULLmap ran into StackOverflow errors on large inputs.
+Java's built-in HashMap was especially fast when the length of the string was small.
+My BSTmap was slow for strings will small lengths.
