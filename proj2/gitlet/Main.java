@@ -1,14 +1,21 @@
 package gitlet;
 
+import java.io.IOException;
+
+import static gitlet.Repository.add;
+
+
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author Hanyuan Xu
  */
 public class Main {
+
+    private static boolean setUpRepo = false;
 
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         int length = args.length;
         if (length == 0) {
             System.out.println("Please enter a command.");
@@ -23,7 +30,14 @@ public class Main {
                     System.out.println("Incorrect operands.");
                     break;
                 }
-                
+
+                if (!setUpRepo) {
+                    System.out.println("A Gitlet version-control system already exists in the current directory.");
+                    break;
+                }
+
+                Repository.setUpPersistence();
+                setUpRepo = true;
 
                 break;
             case "add":
@@ -34,7 +48,11 @@ public class Main {
                     break;
                 }
 
-
+                String fileName = args[1];
+                if (!add(fileName)) {
+                    System.out.println("File does not exist.");
+                    break;
+                }
                 break;
             case "commit":
 

@@ -9,7 +9,7 @@ import static capers.CapersRepository.makeDog;
 import static capers.Utils.*;
 
 /** Canine Capers: A Gitlet Prelude.
- * @author TODO
+ * @author Hanyuan Xu
 */
 public class Main {
     /**

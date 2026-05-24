@@ -8,7 +8,7 @@ import static capers.CapersRepository.CAPERS_FOLDER;
 import static capers.Utils.*;
 
 /** Represents a dog that can be serialized.
- * @author TODO
+ * @author Hanyuan Xu
 */
 public class Dog implements Serializable {
 
