@@ -1,18 +1,19 @@
-lab1: 32/32
-lab2: 64/64
-lab3: 64/64
-lab4: 32/32
-lab4A: 16/16
-lab4B: 16/16
-lab6: 64/64
-lab7: 64/64
-lab8: N/A
-lab12: N/A
-project0: 640/640
-projcet1-checkpoint: 16/16
-project1: 640/640
-project1-EC: N/A
-project2-checkpoint: N/A
-project2: N/A
-project3-part1: N/A
-projcet3-part2: N/A
+### Assignments From CS61B Spring 2021
+- lab1:                 32/32
+- lab2:                 64/64
+- lab3:                 64/64
+- lab4:                 32/32
+- lab4A:                16/16
+- lab4B:                16/16
+- lab6:                 64/64
+- lab7:                 64/64
+- lab8:                 NA/64
+- lab12:                NA/64
+- project0:             640/640
+- projcet1-checkpoint:  16/16
+- project1:             640/640
+- project1-EC:          NA/32
+- project2-checkpoint:  NA/16
+- project2:             NA/1600
+- project3-part1:       NA/100
+- projcet3-part2:       NA/100
