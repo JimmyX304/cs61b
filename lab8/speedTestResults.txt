@@ -1,0 +1,3 @@
+HashMaps with ArrayList and LinkedList seem to have the best time.
+My implementation has a pretty good runtime (uses LinkedList).
+Java's built-in HashMap is considerably faster than my implementation.
