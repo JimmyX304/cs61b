@@ -1,17 +1,18 @@
 package gitlet;
 
+import java.io.File;
 import java.io.IOException;
 
 import static gitlet.Repository.add;
+import static gitlet.Repository.fileExists;
+
+import static gitlet.Utils.*;
 
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author Hanyuan Xu
  */
 public class Main {
-
-    private static boolean setUpRepo = false;
-
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
@@ -21,141 +22,108 @@ public class Main {
             System.out.println("Please enter a command.");
             return;
         }
+
         String firstArg = args[0];
+        String fileName;
+
+        // TODO: fill in cases
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                validateNumArgs(length, 1);
 
-                if (length != 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
-                if (!setUpRepo) {
+                if (Repository.fileExists(".gitlet")) {
                     System.out.println("A Gitlet version-control system already exists in the current directory.");
                     break;
                 }
 
-                Repository.setUpPersistence();
-                setUpRepo = true;
+                Repository.init();
 
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                validateNumArgs(length, 2);
 
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
-                String fileName = args[1];
-                if (!add(fileName)) {
+                fileName = args[1];
+                if (!Repository.add(fileName)) {
                     System.out.println("File does not exist.");
                     break;
                 }
+
                 break;
             case "commit":
+                validateNumArgs(length, 2);
 
-                if (length == 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                String msg = args[1];
+                Repository.makeCommit(msg);
 
                 break;
             case "rm":
-
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                validateNumArgs(length, 2);
 
                 break;
             case "log":
-
-                if (length != 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                validateNumArgs(length, 1);
 
                 break;
             case "global-log":
-
-                if (length != 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                validateNumArgs(length, 1);
 
                 break;
             case "find":
-
-                if (length == 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
-
+                validateNumArgs(length, 2);
 
                 break;
             case "status":
-
-                if (length != 1) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
-
+                validateNumArgs(length, 1);
 
                 break;
             case "checkout":
+                if (length == 2) {
+                    // operation 3
 
+                } else if (length == 3) {
+                    // operation 1
 
+                } else if (length == 4) {
+                    // operation 2
+
+                } else {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
                 break;
             case "branch":
-
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                validateNumArgs(length, 2);
 
 
                 break;
             case "rm-branch":
-
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
-
+                validateNumArgs(length, 2);
 
 
                 break;
             case "reset":
-
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
+                validateNumArgs(length, 2);
 
 
 
                 break;
             case "merge":
-
-                if (length != 2) {
-                    System.out.println("Incorrect operands.");
-                    break;
-                }
+                validateNumArgs(length, 2);
 
 
 
                 break;
             default:
                 System.out.println("No command with that name exists.");
+                break;
+        }
+    }
+
+    /** Validates the number of arguments. */
+    public static void validateNumArgs(int l, int correct) {
+        if (l != correct) {
+            System.out.println("Incorrect operands.");
+            System.exit(0);
         }
     }
 }

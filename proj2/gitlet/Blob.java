@@ -1,0 +1,25 @@
+package gitlet;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+
+import static gitlet.Utils.*;
+
+/** The Blob class stores the text of a file. It is used to show the changes made. */
+public class Blob implements Serializable {
+
+    // TODO: finish this class
+
+    /** The contents of a file at a point in time. */
+    private String contents;
+
+    public Blob(File f) throws IOException {
+        contents = readContentsAsString(f);
+
+        File newBlobFile = join(Repository.BLOB_DIR, sha1(contents));
+        newBlobFile.createNewFile();
+
+        writeObject(newBlobFile, this);
+    }
+}

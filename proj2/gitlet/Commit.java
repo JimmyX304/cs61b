@@ -1,8 +1,13 @@
 package gitlet;
 
-// TODO: any imports you need here
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-import java.util.Date; // TODO: You'll likely use this in this class
+import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -10,7 +15,7 @@ import java.util.Date; // TODO: You'll likely use this in this class
  *
  *  @author Hanyuan Xu
  */
-public class Commit {
+public class Commit implements Serializable {
     /**
      * TODO: add instance variables here.
      *
@@ -23,16 +28,28 @@ public class Commit {
     private String message;
     /** The date this Commit was made. */
     private Date date;
+    /** The parent of this commit, stored as a SHA1 hash. */
+    private String parent;
 
-    /* TODO: fill in the rest of this class. */
+    /** A List containing all the files updated in this commit. */
+    private List<File> fileList;
 
-    public Commit(String message) {
+    /** Blobs of the corresponding files. */
+    private List<Blob> blobList;
+
+    public Commit(String message, String par) {
         this.message = message;
-        this.date = new Date(1970, 1, 1, 0, 0, 0);
+        this.date = new Date();
+        this.parent = par;
+        if (par == null) {
+            this.date = new Date(0);
+        }
     }
 
-    public Commit(String message, Date dt) {
-        this.message = message;
-        this.date = dt;
+    public void addFile(String fileName) throws IOException {
+        File f = join(Repository.CWD, fileName);
+
+        fileList.add(f);
+        blobList.add(new Blob(f));
     }
 }
