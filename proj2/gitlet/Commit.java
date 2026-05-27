@@ -32,10 +32,10 @@ public class Commit implements Serializable {
     private String parent;
 
     /** A List containing all the files updated in this commit. */
-    private List<File> fileList;
+    private List<File> fileList = new ArrayList<>();
 
     /** Blobs of the corresponding files. */
-    private List<Blob> blobList;
+    private List<Blob> blobList = new ArrayList<>();
 
     public Commit(String message, String par) {
         this.message = message;

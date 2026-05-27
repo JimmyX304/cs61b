@@ -1,5 +1,7 @@
 package gitlet;
 
+import edu.princeton.cs.algs4.ST;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -26,13 +28,13 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /** The staging area. This is where all files staged for addition or removal are put. */
-    public static File STAGING_DIR;
+    public static final File STAGING_DIR = join(GITLET_DIR, "stage");;
 
     /** The commit directory. Folder that stores all the commits. */
-    public static File COMMIT_DIR;
+    public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
 
     /** The blob directory. This is where the text written in files is stored. */
-    public static File BLOB_DIR;
+    public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
 
 
     /** The head pointer. It should be the SHA1 hash of the latest commit. */
@@ -45,13 +47,8 @@ public class Repository {
     /** Sets up persistence. */
     public static void init() throws IOException {
         GITLET_DIR.mkdir();
-        STAGING_DIR = new File(GITLET_DIR, "stage");
         STAGING_DIR.mkdir();
-
-        COMMIT_DIR = new File(GITLET_DIR, "commits");
         COMMIT_DIR.mkdir();
-
-        BLOB_DIR = new File(GITLET_DIR, "blobs");
         BLOB_DIR.mkdir();
 
         addInitCommit();
@@ -73,13 +70,16 @@ public class Repository {
     /** Adds a file to the staging area for commits.
       * Aborts and returns false if the file doesn't exist.
       */
-    public static boolean add(String fileName) {
+    public static boolean add(String fileName) throws IOException {
         if (!fileExists(fileName)) {
             return false;
         }
-
         // TODO: fill in this function
 
+        File newFile = join(STAGING_DIR, fileName);
+        newFile.createNewFile();
+
+        writeObject(newFile, readContentsAsString(join(CWD, fileName)));
 
         return true;
     }
@@ -100,8 +100,11 @@ public class Repository {
         Commit c = new Commit(msg, head);
 
         List<String> filesToChange = plainFilenamesIn(STAGING_DIR);
-        for (String fileName : filesToChange) {
-            c.addFile(fileName);
+        if (filesToChange != null) {
+            for (String fileName : filesToChange) {
+                c.addFile(fileName);
+                join(STAGING_DIR, fileName).delete();
+            }
         }
 
         // TODO: make head equal to the current Commit
