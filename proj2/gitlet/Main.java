@@ -50,11 +50,14 @@ public class Main {
 
                 break;
             case "commit":
-                validateNumArgs(length, 2);
-
-                String msg = args[1];
-                Repository.makeCommit(msg);
-
+                if (length == 1) {
+                    System.out.println("Please enter a commit message.");
+                } else if (length == 2) {
+                    String msg = args[1];
+                    Repository.makeCommit(msg);
+                } else {
+                    validateNumArgs(length, 2);
+                }
                 break;
             case "rm":
                 validateNumArgs(length, 2);
@@ -62,6 +65,8 @@ public class Main {
                 break;
             case "log":
                 validateNumArgs(length, 1);
+
+                Repository.outputLog();
 
                 break;
             case "global-log":
@@ -83,8 +88,14 @@ public class Main {
                 } else if (length == 3) {
                     // operation 1
 
+                    fileName = args[2];
+                    Repository.checkout(Repository.getHead(), fileName);
+
                 } else if (length == 4) {
                     // operation 2
+
+                    fileName = args[3];
+                    Repository.checkout(args[1], fileName);
 
                 } else {
                     System.out.println("Incorrect operands.");

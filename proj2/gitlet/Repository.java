@@ -1,11 +1,13 @@
 package gitlet;
 
+import edu.princeton.cs.algs4.Heap;
 import edu.princeton.cs.algs4.ST;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
-import java.util.TreeSet;
 
 import static gitlet.Utils.*;
 
@@ -39,11 +41,8 @@ public class Repository {
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
 
 
-    /** The head pointer. It should be the SHA1 hash of the latest commit. */
-    public static String head = null;
-
-
-
+    /** The head file. The contents should be the filename of the most recent commit. */
+    public static final File headFile = join(GITLET_DIR, "head");
 
 
     /** Sets up persistence. */
@@ -53,6 +52,9 @@ public class Repository {
         COMMIT_DIR.mkdir();
         tempFile.createNewFile();
         BLOB_DIR.mkdir();
+
+        headFile.createNewFile();
+        setHead("null");
 
         addInitCommit();
     }
@@ -77,30 +79,27 @@ public class Repository {
         if (!fileExists(fileName)) {
             return false;
         }
-        // TODO: fill in this function
 
         File newFile = join(STAGING_DIR, fileName);
-        newFile.createNewFile();
+        File currentFile = join(CWD, fileName);
 
-        writeObject(newFile, readContentsAsString(join(CWD, fileName)));
+        if (newFile.exists()) {
+            if (readContents(newFile).equals(readContents(currentFile))) {
+                newFile.delete();
+            }
+        } else {
+            newFile.createNewFile();
+            writeObject(newFile, readContentsAsString(currentFile));
+        }
 
         return true;
     }
 
-    /** Adds a commit into the commit directory. */
-    // TODO: Mabye delete this function?
-    public static void addCommit(Commit c) {
-        File outfile = join(Repository.COMMIT_DIR, sha1(c));
-        writeObject(outfile, c);
-    }
-
-
     /** Makes a commit with the given message and adds it to the commit directory.
-     * Here, all files staged for addition or removal should be saved.
-     * This where the head pointer should be updated.
+     * All files staged for addition or removal are saved in the new commit, and the staging are is cleared.
      */
     public static void makeCommit(String msg) throws IOException {
-        Commit c = new Commit(msg, head);
+        Commit c = new Commit(msg, getHead());
 
         List<String> filesToChange = plainFilenamesIn(STAGING_DIR);
         if (filesToChange != null) {
@@ -108,14 +107,63 @@ public class Repository {
                 c.addFile(fileName);
                 join(STAGING_DIR, fileName).delete();
             }
+        } else {
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
         }
 
         writeObject(tempFile, c);
-        String fileName = sha1(readContentsAsString(tempFile));
+        String fileName = sha1(readContents(tempFile));
 
         File commitFile = join(COMMIT_DIR, fileName);
         writeObject(commitFile, c);
 
-        head = fileName;
+        setHead(fileName);
+    }
+
+    /** Outputs a log of commits. */
+    public static void outputLog() {
+        String pointer = getHead();
+        while (!pointer.equals("null")) {
+            Commit c = readObject(join(COMMIT_DIR, pointer), Commit.class);
+
+            Date d = c.getDate();
+
+            System.out.println("===");
+            System.out.println("commit " + pointer);
+            System.out.println("Date: " + String.format(Locale.ENGLISH, "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
+            System.out.println(c.getMessage());
+            System.out.println();
+
+            pointer = c.getParent();
+        }
+    }
+
+    /** Gets the current head. */
+    public static String getHead() {
+        return readContentsAsString(headFile);
+    }
+
+    /** Sets the head pointer to filename. */
+    public static void setHead(String fileName) {
+        writeContents(headFile, fileName);
+    }
+
+    public static void checkout(String commitID, String fileName) {
+        File commitFile = join(COMMIT_DIR, commitID);
+        if (commitFile.exists()) {
+            Commit c = readObject(commitFile, Commit.class);
+            Blob b = c.getBlob(fileName);
+            if (b != null) {
+                File origFile = join(CWD, fileName);
+                writeContents(origFile, b.getContents());
+            } else {
+                System.out.println("File does not exist in that commit.");
+                System.exit(0);
+            }
+        } else {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
     }
 }

@@ -41,15 +41,42 @@ public class Commit implements Serializable {
         this.message = message;
         this.date = new Date();
         this.parent = par;
-        if (par == null) {
+        if (par.equals("null")) {
             this.date = new Date(0);
         }
     }
 
+    /** Gets the Blob of a file. Returns null if file doesn't exist. */
+    public Blob getBlob(String fileName) {
+        File f = join(Repository.CWD, fileName);
+        for (int i = 0; i < fileList.size(); i++) {
+            if (fileList.get(i).equals(f)) {
+                return blobList.get(i);
+            }
+        }
+        return null;
+    }
+
+    /** Adds a file into fileList. */
     public void addFile(String fileName) throws IOException {
         File f = join(Repository.CWD, fileName);
 
         fileList.add(f);
         blobList.add(new Blob(f));
+    }
+
+    /** Gets the date the Commit was created. */
+    public Date getDate() {
+        return date;
+    }
+
+    /** Gets the parent of the Commit. */
+    public String getParent() {
+        return parent;
+    }
+
+    /** Gets the message of the Commit. */
+    public String getMessage() {
+        return message;
     }
 }

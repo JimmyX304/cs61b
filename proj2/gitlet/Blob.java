@@ -22,4 +22,9 @@ public class Blob implements Serializable {
 
         writeObject(newBlobFile, this);
     }
+
+    /** Returns the contents of the Blob */
+    public String getContents() {
+        return contents;
+    }
 }
