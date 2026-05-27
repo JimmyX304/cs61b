@@ -33,6 +33,8 @@ public class Repository {
     /** The commit directory. Folder that stores all the commits. */
     public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
 
+    public static final File tempFile = join(COMMIT_DIR, "tempFile");
+
     /** The blob directory. This is where the text written in files is stored. */
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
 
@@ -49,6 +51,7 @@ public class Repository {
         GITLET_DIR.mkdir();
         STAGING_DIR.mkdir();
         COMMIT_DIR.mkdir();
+        tempFile.createNewFile();
         BLOB_DIR.mkdir();
 
         addInitCommit();
@@ -70,7 +73,7 @@ public class Repository {
     /** Adds a file to the staging area for commits.
       * Aborts and returns false if the file doesn't exist.
       */
-    public static boolean add(String fileName) throws IOException {
+    public static boolean addToStage(String fileName) throws IOException {
         if (!fileExists(fileName)) {
             return false;
         }
@@ -107,7 +110,12 @@ public class Repository {
             }
         }
 
-        // TODO: make head equal to the current Commit
-        head = null;
+        writeObject(tempFile, c);
+        String fileName = sha1(readContentsAsString(tempFile));
+
+        File commitFile = join(COMMIT_DIR, fileName);
+        writeObject(commitFile, c);
+
+        head = fileName;
     }
 }

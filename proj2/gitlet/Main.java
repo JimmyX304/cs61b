@@ -3,7 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 
-import static gitlet.Repository.add;
+import static gitlet.Repository.addToStage;
 import static gitlet.Repository.fileExists;
 
 import static gitlet.Utils.*;
@@ -43,7 +43,7 @@ public class Main {
                 validateNumArgs(length, 2);
 
                 fileName = args[1];
-                if (!Repository.add(fileName)) {
+                if (!Repository.addToStage(fileName)) {
                     System.out.println("File does not exist.");
                     break;
                 }
