@@ -16,117 +16,119 @@ public class Main {
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) throws IOException {
-        int length = args.length;
-        if (length == 0) {
-            System.out.println("Please enter a command.");
-            return;
-        }
+    public static void main(String[] args) {
+        try {
+            int length = args.length;
+            if (length == 0) {
+                System.out.println("Please enter a command.");
+                return;
+            }
 
-        String firstArg = args[0];
-        String fileName;
+            String firstArg = args[0];
+            String fileName;
 
-        // TODO: fill in cases
-        switch(firstArg) {
-            case "init":
-                validateNumArgs(length, 1);
+            // TODO: fill in cases
+            switch (firstArg) {
+                case "init":
+                    validateNumArgs(length, 1);
 
-                if (Repository.fileExists(".gitlet")) {
-                    System.out.println("A Gitlet version-control system already exists in the current directory.");
+                    if (Repository.fileExists(".gitlet")) {
+                        System.out.println("A Gitlet version-control system already exists in the current directory.");
+                        break;
+                    }
+
+                    Repository.init();
+
                     break;
-                }
-
-                Repository.init();
-
-                break;
-            case "add":
-                validateNumArgs(length, 2);
-
-                fileName = args[1];
-                if (!Repository.addToStage(fileName)) {
-                    System.out.println("File does not exist.");
-                    break;
-                }
-
-                break;
-            case "commit":
-                if (length == 1) {
-                    System.out.println("Please enter a commit message.");
-                } else if (length == 2) {
-                    String msg = args[1];
-                    Repository.makeCommit(msg);
-                } else {
+                case "add":
                     validateNumArgs(length, 2);
-                }
-                break;
-            case "rm":
-                validateNumArgs(length, 2);
 
-                break;
-            case "log":
-                validateNumArgs(length, 1);
+                    fileName = args[1];
+                    if (!Repository.addToStage(fileName)) {
+                        System.out.println("File does not exist.");
+                        break;
+                    }
 
-                Repository.outputLog();
+                    break;
+                case "commit":
+                    if (length == 1) {
+                        System.out.println("Please enter a commit message.");
+                    } else if (length == 2) {
+                        String msg = args[1];
+                        Repository.makeCommit(msg);
+                    } else {
+                        validateNumArgs(length, 2);
+                    }
+                    break;
+                case "rm":
+                    validateNumArgs(length, 2);
 
-                break;
-            case "global-log":
-                validateNumArgs(length, 1);
+                    break;
+                case "log":
+                    validateNumArgs(length, 1);
 
-                break;
-            case "find":
-                validateNumArgs(length, 2);
+                    Repository.outputLog();
 
-                break;
-            case "status":
-                validateNumArgs(length, 1);
+                    break;
+                case "global-log":
+                    validateNumArgs(length, 1);
 
-                break;
-            case "checkout":
-                if (length == 2) {
-                    // operation 3
+                    break;
+                case "find":
+                    validateNumArgs(length, 2);
 
-                } else if (length == 3) {
-                    // operation 1
+                    break;
+                case "status":
+                    validateNumArgs(length, 1);
 
-                    fileName = args[2];
-                    Repository.checkout(Repository.getHead(), fileName);
+                    break;
+                case "checkout":
+                    if (length == 2) {
+                        // operation 3
 
-                } else if (length == 4) {
-                    // operation 2
+                    } else if (length == 3) {
+                        // operation 1
 
-                    fileName = args[3];
-                    Repository.checkout(args[1], fileName);
+                        fileName = args[2];
+                        Repository.checkout(Repository.getHead(), fileName);
 
-                } else {
-                    System.out.println("Incorrect operands.");
-                    System.exit(0);
-                }
-                break;
-            case "branch":
-                validateNumArgs(length, 2);
+                    } else if (length == 4) {
+                        // operation 2
 
+                        fileName = args[3];
+                        Repository.checkout(args[1], fileName);
 
-                break;
-            case "rm-branch":
-                validateNumArgs(length, 2);
-
-
-                break;
-            case "reset":
-                validateNumArgs(length, 2);
+                    } else {
+                        System.out.println("Incorrect operands.");
+                        System.exit(0);
+                    }
+                    break;
+                case "branch":
+                    validateNumArgs(length, 2);
 
 
-
-                break;
-            case "merge":
-                validateNumArgs(length, 2);
-
+                    break;
+                case "rm-branch":
+                    validateNumArgs(length, 2);
 
 
-                break;
-            default:
-                System.out.println("No command with that name exists.");
-                break;
+                    break;
+                case "reset":
+                    validateNumArgs(length, 2);
+
+
+                    break;
+                case "merge":
+                    validateNumArgs(length, 2);
+
+
+                    break;
+                default:
+                    System.out.println("No command with that name exists.");
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

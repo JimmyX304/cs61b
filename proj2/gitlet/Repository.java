@@ -84,7 +84,7 @@ public class Repository {
         File currentFile = join(CWD, fileName);
 
         if (newFile.exists()) {
-            if (readContents(newFile).equals(readContents(currentFile))) {
+            if (Arrays.equals(readContents(newFile), readContents(currentFile))) {
                 newFile.delete();
             }
         } else {
@@ -113,7 +113,7 @@ public class Repository {
         }
 
         writeObject(tempFile, c);
-        String fileName = sha1(readContents(tempFile));
+        String fileName = sha1(readContentsAsString(tempFile));
 
         File commitFile = join(COMMIT_DIR, fileName);
         writeObject(commitFile, c);
