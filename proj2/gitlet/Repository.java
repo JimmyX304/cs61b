@@ -249,6 +249,38 @@ public class Repository {
         }
     }
 
+    /** Checkouts the given branch. */
+    public static void checkoutBranch(String branchName) throws IOException {
+        File branch = join(BRANCH_DIR, branchName);
+        if (branch.exists()) {
+            if (!branchName.equals(getHeadBranch())) {
+                Commit c = getHeadCommitOfBranch(branchName);
+                Map<String, String> trackedFiles = c.getTrackedFiles();
+
+                Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
+
+                for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
+                    File rmFile = join(CWD, entry.getValue());
+                    rmFile.delete();
+                }
+
+                for (Map.Entry<String, String> fileStored : trackedFiles.entrySet()) {
+                    File updateFile = join(CWD, fileStored.getKey());
+                    Blob b = readObject(join(BLOB_DIR, fileStored.getValue()), Blob.class);
+                    writeContents(updateFile, b.getContents());
+                }
+
+                setHeadToBranch(branchName);
+            } else {
+                System.out.println("No need to checkout the current branch.");
+                System.exit(0);
+            }
+        } else {
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+    }
+
     /** Sets the head to the given branch. */
     public static void setBranch(String branchName) throws IOException {
         File branch = join(BRANCH_DIR, branchName);
@@ -384,6 +416,15 @@ public class Repository {
     /** Gets the current branch. */
     public static String getHeadBranch() {
         return readContentsAsString(headBranch);
+    }
+
+    public static String getHeadOfBranch(String branchName) {
+        return readContentsAsString(join(BRANCH_DIR, branchName));
+    }
+
+    /** Gets the head commit of a branch. */
+    public static Commit getHeadCommitOfBranch(String branchName) {
+        return readObject(join(COMMIT_DIR, getHeadOfBranch(branchName)), Commit.class);
     }
 
     /** Gets the current head commit. */

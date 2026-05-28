@@ -48,7 +48,7 @@ public class Main {
 
                     break;
                 case "commit":
-                    if (length == 1) {
+                    if (length == 1 || args[1].isBlank()) {
                         System.out.println("Please enter a commit message.");
                     } else if (length == 2) {
                         String msg = args[1];
@@ -94,7 +94,7 @@ public class Main {
                         // operation 3
 
                         branchName = args[1];
-                        Repository.setBranch(branchName);
+                        Repository.checkoutBranch(branchName);
 
                     } else if (length == 3) {
                         // operation 1
