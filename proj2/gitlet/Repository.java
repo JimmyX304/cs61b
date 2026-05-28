@@ -87,6 +87,12 @@ public class Repository {
             return false;
         }
 
+        File rmFile = join(STAGERM, fileName);
+        if (rmFile.exists()) {
+            rmFile.delete();
+            return true;
+        }
+
         File newFile = join(STAGEADD, fileName);
         File currentFile = join(CWD, fileName);
 
@@ -134,7 +140,7 @@ public class Repository {
         didAnyOps |= removeFromStageAdd(fileName);
         didAnyOps |= stageForRemoval(fileName);
 
-        if (didAnyOps == false) {
+        if (!didAnyOps) {
             System.out.println("No reason to remove the file.");
             System.exit(0);
         }
