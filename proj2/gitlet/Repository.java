@@ -58,6 +58,7 @@ public class Repository {
         setHeadToBranch("master");
 
         addInitBranch();
+
         addInitCommit();
     }
 
@@ -137,6 +138,22 @@ public class Repository {
         }
     }
 
+    /** Removes a branch. */
+    public static void removeBranch(String branchName) {
+        File currentBranch = join(BRANCH_DIR, branchName);
+        if (currentBranch.exists()) {
+            if (!getHeadBranch().equals(branchName)) {
+                currentBranch.delete();
+            } else {
+                System.out.println("Cannot remove the current branch.");
+                System.exit(0);
+            }
+        } else {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+    }
+
     /** Restores a file in a given commit. */
     public static void checkout(String commitID, String fileName) {
         File commitFile = join(COMMIT_DIR, commitID);
@@ -165,28 +182,108 @@ public class Repository {
         setHeadToBranch(branchName);
     }
 
-    /** Outputs a log of commits. */
+    public static void getCommitsWithMessage(String commitMessage) {
+        List<String> commitIDs = plainFilenamesIn(COMMIT_DIR);
+        List<String> validCommits = new LinkedList<>();
+        for (String commitID : commitIDs) {
+            Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
+            if (c.getMessage().equals(commitMessage)) {
+                validCommits.add(commitID);
+            }
+        }
+
+        if (!validCommits.isEmpty()) {
+            for (String commit : validCommits) {
+                System.out.println(commit);
+            }
+        } else {
+            System.out.println("Found no commit with that message.");
+            System.exit(0);
+        }
+    }
+
+    /** Outputs a log of commits in the current branch. */
     public static void outputLog() {
         String pointer = getHead();
-        while (!pointer.equals("null")) {
+        while (!pointer.equals("")) {
             Commit c = readObject(join(COMMIT_DIR, pointer), Commit.class);
-
-            Date d = c.getDate();
-
-            System.out.println("===");
-            System.out.println("commit " + pointer);
-            System.out.println("Date: " + String.format(Locale.ENGLISH, "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
-            System.out.println(c.getMessage());
-            System.out.println();
-
+            outputCommitLog(c, pointer);
             pointer = c.getParent();
         }
     }
 
+    /** Outputs a log of all commits. */
+    public static void outputGlobalLog() {
+        List<String> commitIDs = plainFilenamesIn(COMMIT_DIR);
+        for (String commitID : commitIDs) {
+            Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
+            outputCommitLog(c, commitID);
+        }
+    }
+
+    /** Outputs the commit c as a log. */
+    public static void outputCommitLog(Commit c, String cID) {
+        Date d = c.getDate();
+
+        System.out.println("===");
+        System.out.println("commit " + cID);
+        System.out.println("Date: " + String.format(Locale.ENGLISH, "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
+        System.out.println(c.getMessage());
+        System.out.println();
+    }
+
+    /** Outputs the status. */
+    public static void outputStatus() {
+        // TODO: fill in this function
+        outputBranches();
+
+        outputStagedFiles();
+
+
+
+        System.out.println("=== Removed Files ===");
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+
+        System.out.println("=== Untracked Files ===");
+    }
+
+    /** Outputs the branches. */
+    public static void outputBranches() {
+        System.out.println("=== Branches ===");
+
+        String headbranch = getHeadBranch();
+        List<String> branches = plainFilenamesIn(BRANCH_DIR);
+        if (branches != null) {
+            Collections.sort(branches);
+            for (String curBranch : branches) {
+                if (curBranch.equals(headbranch)) {
+                    System.out.print("*");
+                }
+                System.out.println(curBranch);
+            }
+            System.out.println();
+        }
+    }
+
+    /** Outputs staged files. */
+    public static void outputStagedFiles() {
+        System.out.println("=== Staged Files ===");
+        List<String> addFiles = plainFilenamesIn(STAGING_DIR);
+        if (addFiles != null) {
+            for (String fileName : addFiles) {
+                System.out.println(fileName);
+            }
+        }
+    }
 
     /** Gets the current head. */
     public static String getHead() {
-        return readContentsAsString(join(BRANCH_DIR, readContentsAsString(headBranch)));
+        return readContentsAsString(join(BRANCH_DIR, getHeadBranch()));
+    }
+    /** Gets the current branch. */
+    public static String getHeadBranch() {
+        return readContentsAsString(headBranch);
     }
 
     /** Sets the head pointer to branchName. */
@@ -194,6 +291,7 @@ public class Repository {
         writeContents(headBranch, branchName);
     }
 
+    /** Sets the head of a branch to a commit. */
     public static void setHeadOfBranch(String hash) {
         writeContents(join(BRANCH_DIR, readContentsAsString(headBranch)), hash);
     }

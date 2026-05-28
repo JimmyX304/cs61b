@@ -24,6 +24,7 @@ public class Main {
 
             String firstArg = args[0];
             String fileName;
+            String branchName;
             switch (firstArg) {
                 case "init":
                     validateNumArgs(length, 1);
@@ -68,25 +69,29 @@ public class Main {
 
                     break;
                 case "global-log":
-                    // TODO: fill in this case
                     validateNumArgs(length, 1);
+
+                    Repository.outputGlobalLog();
 
                     break;
                 case "find":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
+
+                    String commitMessage = args[1];
+                    Repository.getCommitsWithMessage(commitMessage);
 
                     break;
                 case "status":
-                    // TODO: fill in this case
                     validateNumArgs(length, 1);
+
+                    Repository.outputStatus();
 
                     break;
                 case "checkout":
                     if (length == 2) {
                         // operation 3
 
-                        String branchName = args[1];
+                        branchName = args[1];
                         Repository.setBranch(branchName);
 
                     } else if (length == 3) {
@@ -107,16 +112,17 @@ public class Main {
                     }
                     break;
                 case "branch":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
-                    Repository.addBranch(args[1]);
+                    branchName = args[1];
+                    Repository.addBranch(branchName);
 
                     break;
                 case "rm-branch":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
+                    branchName = args[1];
+                    Repository.removeBranch(branchName);
 
                     break;
                 case "reset":
