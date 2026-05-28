@@ -65,7 +65,14 @@ public class Repository {
 
     /** Adds the initial commit message. */
     public static void addInitCommit() throws IOException {
-        makeCommit("initial commit");
+        Commit c = new Commit("initial commit", getHead());
+
+        String fileName = sha1(serialize(c));
+
+        File commitFile = join(COMMIT_DIR, fileName);
+        writeObject(commitFile, c);
+
+        setHeadOfBranch(fileName);
     }
 
     /** Adds the initial branch. */
@@ -100,10 +107,17 @@ public class Repository {
             if (Arrays.equals(readContents(newFile), readContents(currentFile))) {
                 newFile.delete();
             }
-        } else {
-            newFile.createNewFile();
-            writeObject(newFile, readContentsAsString(currentFile));
         }
+
+        Commit c = getHeadCommit();
+        if (c.isTracked(fileName)) {
+            if (c.getBlob(fileName).getContents().equals(readContentsAsString(currentFile))) {
+                return true;
+            }
+        }
+
+        newFile.createNewFile();
+        writeObject(newFile, readContentsAsString(currentFile));
 
         return true;
     }
@@ -156,13 +170,13 @@ public class Repository {
         List<String> filesToAdd = plainFilenamesIn(STAGEADD);
         List<String> filesToRm = plainFilenamesIn(STAGERM);
 
-        if (filesToAdd != null) {
+        if (!filesToAdd.isEmpty()) {
             for (String fileName : filesToAdd) {
                 c.addFile(fileName);
                 join(STAGEADD, fileName).delete();
             }
         } else {
-            if (filesToRm == null) {
+            if (filesToRm.isEmpty()) {
                 System.out.println("No changes added to the commit.");
                 System.exit(0);
             }
@@ -370,6 +384,11 @@ public class Repository {
     /** Gets the current branch. */
     public static String getHeadBranch() {
         return readContentsAsString(headBranch);
+    }
+
+    /** Gets the current head commit. */
+    public static Commit getHeadCommit() {
+        return readObject(join(COMMIT_DIR, getHead()), Commit.class);
     }
 
     /** Sets the head pointer to branchName. */
