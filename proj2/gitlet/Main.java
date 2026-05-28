@@ -128,8 +128,9 @@ public class Main {
 
                     break;
                 case "reset":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
+
+                    Repository.checkoutCommit(args[1]);
 
 
                     break;

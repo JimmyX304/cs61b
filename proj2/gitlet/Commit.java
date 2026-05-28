@@ -1,29 +1,23 @@
 package gitlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ *  Stores:
+ *   A commit message
+ *   A date this commit was created
+ *   The parent of the commit
+ *   Any files tracked by this commit
+ *   Any files updated by this commit
  *
  *  @author Hanyuan Xu
  */
 public class Commit implements Serializable {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
 
     /** The message of this Commit. */
     private String message;

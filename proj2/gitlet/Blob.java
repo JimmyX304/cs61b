@@ -11,8 +11,6 @@ import static gitlet.Utils.*;
  * */
 public class Blob implements Serializable {
 
-    // TODO: finish this class
-
     /** The contents of a file at a point in time. */
     private String contents;
 

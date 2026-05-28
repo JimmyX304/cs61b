@@ -8,8 +8,6 @@ import java.util.List;
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
  *
  *  @author Hanyuan Xu
  */
@@ -43,7 +41,7 @@ public class Repository {
 
     /** The head file. The contents should be the filename of the most recent
      * commit in the current branch. */
-    public static final File headBranch = join(GITLET_DIR, "headBranch");
+    public static final File HEAD_BRANCH = join(GITLET_DIR, "headBranch");
 
 
     /** Sets up persistence. */
@@ -54,7 +52,7 @@ public class Repository {
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         BRANCH_DIR.mkdir();
-        headBranch.createNewFile();
+        HEAD_BRANCH.createNewFile();
 
         setHeadToBranch("master");
 
@@ -249,6 +247,35 @@ public class Repository {
         }
     }
 
+    /** Checkouts a commit. */
+    public static void checkoutCommit(String commitID) {
+        File commitFile = join(COMMIT_DIR, commitID);
+        if (commitFile.exists()) {
+            removeFilesInDir(STAGEADD);
+            removeFilesInDir(STAGERM);
+            
+            Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
+            for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
+                File rmFile = join(CWD, entry.getValue());
+                if (rmFile.exists()) {
+                    rmFile.delete();
+                }
+            }
+
+            Commit c = readObject(commitFile, Commit.class);
+            Map<String, String> trackedFiles = c.getTrackedFiles();
+
+            for (Map.Entry<String, String> fileStored : trackedFiles.entrySet()) {
+                checkout(commitID, fileStored.getKey());
+            }
+
+            writeContents(join(COMMIT_DIR, getHead()), commitID);
+        } else {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+    }
+
     /** Checkouts the given branch. */
     public static void checkoutBranch(String branchName) throws IOException {
         File branch = join(BRANCH_DIR, branchName);
@@ -261,7 +288,9 @@ public class Repository {
 
                 for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
                     File rmFile = join(CWD, entry.getValue());
-                    rmFile.delete();
+                    if (rmFile.exists()) {
+                        rmFile.delete();
+                    }
                 }
 
                 for (Map.Entry<String, String> fileStored : trackedFiles.entrySet()) {
@@ -393,7 +422,7 @@ public class Repository {
 
     /** Outputs modifications not staged for commit. */
     public static void outputModificationsNotStagedForCommit() {
-        // TODO: fill in this function
+        // EC: fill in this function
         System.out.println("=" + "== Modifications Not Staged For Commit ===");
 
 
@@ -402,11 +431,21 @@ public class Repository {
 
     /** Outputs untracked files. */
     public static void outputUntrackedFiles() {
-        // TODO: fill in this function
+        // EC: fill in this function
         System.out.println("=== Untracked Files ===");
 
 
         System.out.println();
+    }
+
+    /** Removes files in a given directory. */
+    public static void removeFilesInDir(File DIR) {
+        List<String> files = plainFilenamesIn(DIR);
+        if (files != null) {
+            for (String f : files) {
+                join(DIR, f).delete();
+            }
+        }
     }
 
     /** Gets the current head. */
@@ -415,7 +454,7 @@ public class Repository {
     }
     /** Gets the current branch. */
     public static String getHeadBranch() {
-        return readContentsAsString(headBranch);
+        return readContentsAsString(HEAD_BRANCH);
     }
 
     public static String getHeadOfBranch(String branchName) {
@@ -434,11 +473,11 @@ public class Repository {
 
     /** Sets the head pointer to branchName. */
     public static void setHeadToBranch(String branchName) {
-        writeContents(headBranch, branchName);
+        writeContents(HEAD_BRANCH, branchName);
     }
 
     /** Sets the head of a branch to a commit. */
     public static void setHeadOfBranch(String hash) {
-        writeContents(join(BRANCH_DIR, readContentsAsString(headBranch)), hash);
+        writeContents(join(BRANCH_DIR, readContentsAsString(HEAD_BRANCH)), hash);
     }
 }
