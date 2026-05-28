@@ -35,14 +35,15 @@ public class Repository {
     /** The commit directory. Folder that stores all the commits. */
     public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
 
-    public static final File tempFile = join(COMMIT_DIR, "tempFile");
-
     /** The blob directory. This is where the text written in files is stored. */
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
 
+    /** The branch directory. All branches are stored here. */
+    public static final File BRANCH_DIR = join(GITLET_DIR, "branches");
 
-    /** The head file. The contents should be the filename of the most recent commit. */
-    public static final File headFile = join(GITLET_DIR, "head");
+
+    /** The head file. The contents should be the filename of the most recent commit in the current branch. */
+    public static final File headBranch = join(GITLET_DIR, "headBranch");
 
 
     /** Sets up persistence. */
@@ -50,20 +51,24 @@ public class Repository {
         GITLET_DIR.mkdir();
         STAGING_DIR.mkdir();
         COMMIT_DIR.mkdir();
-        tempFile.createNewFile();
         BLOB_DIR.mkdir();
+        BRANCH_DIR.mkdir();
+        headBranch.createNewFile();
 
-        headFile.createNewFile();
-        setHead("null");
+        setHeadToBranch("master");
 
+        addInitBranch();
         addInitCommit();
     }
-
-
 
     /** Adds the initial commit message. */
     public static void addInitCommit() throws IOException {
         makeCommit("initial commit");
+    }
+
+    /** Adds the initial branch. */
+    public static void addInitBranch() throws IOException {
+        addBranch("master");
     }
 
     /** Checks if a file exists. */
@@ -112,13 +117,52 @@ public class Repository {
             System.exit(0);
         }
 
-        writeObject(tempFile, c);
-        String fileName = sha1(readContentsAsString(tempFile));
+        String fileName = sha1(serialize(c));
 
         File commitFile = join(COMMIT_DIR, fileName);
         writeObject(commitFile, c);
 
-        setHead(fileName);
+        setHeadOfBranch(fileName);
+    }
+
+    /** Adds a branch. */
+    public static void addBranch(String branchName) throws IOException {
+        File newBranch = join(BRANCH_DIR, branchName);
+        if (newBranch.exists()) {
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        } else {
+            newBranch.createNewFile();
+            writeContents(newBranch, getHead());
+        }
+    }
+
+    /** Restores a file in a given commit. */
+    public static void checkout(String commitID, String fileName) {
+        File commitFile = join(COMMIT_DIR, commitID);
+        if (commitFile.exists()) {
+            Commit c = readObject(commitFile, Commit.class);
+            Blob b = c.getBlob(fileName);
+            if (b != null) {
+                File origFile = join(CWD, fileName);
+                writeContents(origFile, b.getContents());
+            } else {
+                System.out.println("File does not exist in that commit.");
+                System.exit(0);
+            }
+        } else {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+    }
+
+    /** Sets the head to the given branch. */
+    public static void setBranch(String branchName) throws IOException {
+        File branch = join(BRANCH_DIR, branchName);
+        if (!branch.exists()) {
+            branch.createNewFile();
+        }
+        setHeadToBranch(branchName);
     }
 
     /** Outputs a log of commits. */
@@ -139,31 +183,18 @@ public class Repository {
         }
     }
 
+
     /** Gets the current head. */
     public static String getHead() {
-        return readContentsAsString(headFile);
+        return readContentsAsString(join(BRANCH_DIR, readContentsAsString(headBranch)));
     }
 
-    /** Sets the head pointer to filename. */
-    public static void setHead(String fileName) {
-        writeContents(headFile, fileName);
+    /** Sets the head pointer to branchName. */
+    public static void setHeadToBranch(String branchName) {
+        writeContents(headBranch, branchName);
     }
 
-    public static void checkout(String commitID, String fileName) {
-        File commitFile = join(COMMIT_DIR, commitID);
-        if (commitFile.exists()) {
-            Commit c = readObject(commitFile, Commit.class);
-            Blob b = c.getBlob(fileName);
-            if (b != null) {
-                File origFile = join(CWD, fileName);
-                writeContents(origFile, b.getContents());
-            } else {
-                System.out.println("File does not exist in that commit.");
-                System.exit(0);
-            }
-        } else {
-            System.out.println("No commit with that id exists.");
-            System.exit(0);
-        }
+    public static void setHeadOfBranch(String hash) {
+        writeContents(join(BRANCH_DIR, readContentsAsString(headBranch)), hash);
     }
 }

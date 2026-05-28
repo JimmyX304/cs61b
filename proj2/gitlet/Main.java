@@ -3,9 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 
-import static gitlet.Repository.addToStage;
-import static gitlet.Repository.fileExists;
-
+import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
 
@@ -26,8 +24,6 @@ public class Main {
 
             String firstArg = args[0];
             String fileName;
-
-            // TODO: fill in cases
             switch (firstArg) {
                 case "init":
                     validateNumArgs(length, 1);
@@ -61,6 +57,7 @@ public class Main {
                     }
                     break;
                 case "rm":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
                     break;
@@ -71,20 +68,26 @@ public class Main {
 
                     break;
                 case "global-log":
+                    // TODO: fill in this case
                     validateNumArgs(length, 1);
 
                     break;
                 case "find":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
                     break;
                 case "status":
+                    // TODO: fill in this case
                     validateNumArgs(length, 1);
 
                     break;
                 case "checkout":
                     if (length == 2) {
                         // operation 3
+
+                        String branchName = args[1];
+                        Repository.setBranch(branchName);
 
                     } else if (length == 3) {
                         // operation 1
@@ -104,21 +107,26 @@ public class Main {
                     }
                     break;
                 case "branch":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
+                    Repository.addBranch(args[1]);
 
                     break;
                 case "rm-branch":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
 
                     break;
                 case "reset":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
 
                     break;
                 case "merge":
+                    // TODO: fill in this case
                     validateNumArgs(length, 2);
 
 
