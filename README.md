@@ -13,7 +13,7 @@
 - projcet1-checkpoint:  16/16
 - project1:             640/640
 - project1-EC:          32/32
-- project2-checkpoint:  NA/16
+- project2-checkpoint:  16/16
 - project2:             NA/1600
 - project3-part1:       NA/100
 - projcet3-part2:       NA/100
