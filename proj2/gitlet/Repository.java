@@ -253,7 +253,7 @@ public class Repository {
         if (commitFile.exists()) {
             removeFilesInDir(STAGEADD);
             removeFilesInDir(STAGERM);
-            
+
             Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
             for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
                 File rmFile = join(CWD, entry.getValue());
@@ -269,7 +269,7 @@ public class Repository {
                 checkout(commitID, fileStored.getKey());
             }
 
-            writeContents(join(COMMIT_DIR, getHead()), commitID);
+            writeContents(join(BRANCH_DIR, getHeadBranch()), commitID);
         } else {
             System.out.println("No commit with that id exists.");
             System.exit(0);
@@ -439,11 +439,11 @@ public class Repository {
     }
 
     /** Removes files in a given directory. */
-    public static void removeFilesInDir(File DIR) {
-        List<String> files = plainFilenamesIn(DIR);
+    public static void removeFilesInDir(File dir) {
+        List<String> files = plainFilenamesIn(dir);
         if (files != null) {
             for (String f : files) {
-                join(DIR, f).delete();
+                join(dir, f).delete();
             }
         }
     }

@@ -132,7 +132,6 @@ public class Main {
 
                     Repository.checkoutCommit(args[1]);
 
-
                     break;
                 case "merge":
                     // TODO: fill in this case
