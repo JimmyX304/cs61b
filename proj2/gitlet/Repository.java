@@ -256,7 +256,7 @@ public class Repository {
 
             Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
             for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
-                File rmFile = join(CWD, entry.getValue());
+                File rmFile = join(CWD, entry.getKey());
                 if (rmFile.exists()) {
                     rmFile.delete();
                 }
@@ -286,8 +286,21 @@ public class Repository {
 
                 Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
 
+                List<String> allFiles = plainFilenamesIn(CWD);
+
+                for (String fileName : allFiles) {
+                    if (trackedFiles.containsKey(fileName)) {
+                        System.out.println("There is an untracked file in the way; " +
+                                "delete it, or add and commit it first.");
+                        System.exit(0);
+                    }
+                }
+                
+                removeFilesInDir(STAGEADD);
+                removeFilesInDir(STAGERM);
+
                 for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
-                    File rmFile = join(CWD, entry.getValue());
+                    File rmFile = join(CWD, entry.getKey());
                     if (rmFile.exists()) {
                         rmFile.delete();
                     }
