@@ -58,8 +58,10 @@ public class Main {
                     }
                     break;
                 case "rm":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
+
+                    fileName = args[1];
+                    Repository.removeFile(fileName);
 
                     break;
                 case "log":

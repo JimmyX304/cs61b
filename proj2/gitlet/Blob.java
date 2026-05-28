@@ -6,7 +6,9 @@ import java.io.Serializable;
 
 import static gitlet.Utils.*;
 
-/** The Blob class stores the text of a file. It is used to show the changes made. */
+/** The Blob class stores the text of a file. It is used to store
+ * the contents of a file.
+ * */
 public class Blob implements Serializable {
 
     // TODO: finish this class

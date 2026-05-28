@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import static gitlet.Utils.*;
@@ -31,38 +32,40 @@ public class Commit implements Serializable {
     /** The parent of this commit, stored as a SHA1 hash. */
     private String parent;
 
-    /** A List containing all the files updated in this commit. */
-    private List<File> fileList = new ArrayList<>();
+    /** All files tracked by this commit. */
+    private HashMap<String, String> trackedFiles = new HashMap<>();
 
-    /** Blobs of the corresponding files. */
-    private List<Blob> blobList = new ArrayList<>();
+    /** All files updated in this commit. */
+    private HashMap<String, String> updatedFiles = new HashMap<>();
 
     public Commit(String message, String par) {
         this.message = message;
         this.date = new Date();
         this.parent = par;
-        if (par.equals("null")) {
+        if (par.equals("")) {
             this.date = new Date(0);
+        } else {
+            Commit parentCommit = Repository.readCommitFromHash(par);
+            trackedFiles.putAll(parentCommit.getTrackedFiles());
         }
     }
 
-    /** Gets the Blob of a file. Returns null if file doesn't exist. */
-    public Blob getBlob(String fileName) {
-        File f = join(Repository.CWD, fileName);
-        for (int i = 0; i < fileList.size(); i++) {
-            if (fileList.get(i).equals(f)) {
-                return blobList.get(i);
-            }
-        }
-        return null;
-    }
-
-    /** Adds a file into fileList. */
+    /** Adds a file into the commit. */
     public void addFile(String fileName) throws IOException {
-        File f = join(Repository.CWD, fileName);
+        Blob b = new Blob(join(Repository.CWD, fileName));
+        updatedFiles.put(fileName, sha1(b.getContents()));
+        trackedFiles.put(fileName, sha1(b.getContents()));
+    }
 
-        fileList.add(f);
-        blobList.add(new Blob(f));
+    /** Removes a file from the commit. */
+    public void rmFile(String fileName) {
+        updatedFiles.remove(fileName);
+        trackedFiles.remove(fileName);
+    }
+
+    /** Gets the message of the Commit. */
+    public String getMessage() {
+        return message;
     }
 
     /** Gets the date the Commit was created. */
@@ -75,8 +78,21 @@ public class Commit implements Serializable {
         return parent;
     }
 
-    /** Gets the message of the Commit. */
-    public String getMessage() {
-        return message;
+    /** Gets the tracked files of the Commit. */
+    public HashMap<String, String> getTrackedFiles() {
+        return trackedFiles;
+    }
+
+    /** Checks if a file is tracked. */
+    public boolean isTracked(String fileName) {
+        return trackedFiles.containsKey(fileName);
+    }
+
+    /** Gets the Blob of a file. Returns null if file doesn't exist. */
+    public Blob getBlob(String fileName) {
+        if (isTracked(fileName)) {
+            return readObject(join(Repository.BLOB_DIR, trackedFiles.get(fileName)), Blob.class);
+        }
+        return null;
     }
 }

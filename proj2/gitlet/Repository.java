@@ -1,9 +1,5 @@
 package gitlet;
 
-import edu.princeton.cs.algs4.Heap;
-import edu.princeton.cs.algs4.ST;
-
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -29,8 +25,11 @@ public class Repository {
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
-    /** The staging area. This is where all files staged for addition or removal are put. */
-    public static final File STAGING_DIR = join(GITLET_DIR, "stage");;
+    /** The add staging area. This is where all files staged for addition are put. */
+    public static final File STAGEADD = join(GITLET_DIR, "stageadd");
+
+    /** The rm staging area. This is where all files staged for removal are put. */
+    public static final File STAGERM = join(GITLET_DIR, "stagerm");
 
     /** The commit directory. Folder that stores all the commits. */
     public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
@@ -42,14 +41,16 @@ public class Repository {
     public static final File BRANCH_DIR = join(GITLET_DIR, "branches");
 
 
-    /** The head file. The contents should be the filename of the most recent commit in the current branch. */
+    /** The head file. The contents should be the filename of the most recent
+     * commit in the current branch. */
     public static final File headBranch = join(GITLET_DIR, "headBranch");
 
 
     /** Sets up persistence. */
     public static void init() throws IOException {
         GITLET_DIR.mkdir();
-        STAGING_DIR.mkdir();
+        STAGEADD.mkdir();
+        STAGERM.mkdir();
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         BRANCH_DIR.mkdir();
@@ -86,7 +87,7 @@ public class Repository {
             return false;
         }
 
-        File newFile = join(STAGING_DIR, fileName);
+        File newFile = join(STAGEADD, fileName);
         File currentFile = join(CWD, fileName);
 
         if (newFile.exists()) {
@@ -101,21 +102,71 @@ public class Repository {
         return true;
     }
 
+    /** Removes a file from STAGEADD only if it exists there. */
+    public static boolean removeFromStageAdd(String fileName) {
+        if (plainFilenamesIn(STAGEADD).contains(fileName)) {
+            File fileToRemove = join(STAGEADD, fileName);
+            fileToRemove.delete();
+            return true;
+        }
+        return false;
+    }
+
+    /** Stages a file for removal. */
+    public static boolean stageForRemoval(String fileName) throws IOException {
+        Commit c = readObject(join(COMMIT_DIR, getHead()), Commit.class);
+        if (c.isTracked(fileName)) {
+            File newFile = join(STAGERM, fileName);
+            newFile.createNewFile();
+
+            File rmFile = join(CWD, fileName);
+            if (rmFile.exists()) {
+                rmFile.delete();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /** Removes a file based on the rm command. */
+    public static void removeFile(String fileName) throws IOException {
+        boolean didAnyOps = false;
+        didAnyOps |= removeFromStageAdd(fileName);
+        didAnyOps |= stageForRemoval(fileName);
+
+        if (didAnyOps == false) {
+            System.out.println("No reason to remove the file.");
+            System.exit(0);
+        }
+    }
+
     /** Makes a commit with the given message and adds it to the commit directory.
-     * All files staged for addition or removal are saved in the new commit, and the staging are is cleared.
+     * All files staged for addition or removal are saved in the new commit, and the
+     * staging are is cleared.
      */
     public static void makeCommit(String msg) throws IOException {
         Commit c = new Commit(msg, getHead());
 
-        List<String> filesToChange = plainFilenamesIn(STAGING_DIR);
-        if (filesToChange != null) {
-            for (String fileName : filesToChange) {
+        List<String> filesToAdd = plainFilenamesIn(STAGEADD);
+        List<String> filesToRm = plainFilenamesIn(STAGERM);
+
+        if (filesToAdd != null) {
+            for (String fileName : filesToAdd) {
                 c.addFile(fileName);
-                join(STAGING_DIR, fileName).delete();
+                join(STAGEADD, fileName).delete();
             }
         } else {
-            System.out.println("No changes added to the commit.");
-            System.exit(0);
+            if (filesToRm == null) {
+                System.out.println("No changes added to the commit.");
+                System.exit(0);
+            }
+        }
+
+        if (filesToRm != null) {
+            for (String fileName : filesToRm) {
+                c.rmFile(fileName);
+                join(STAGERM, fileName).delete();
+            }
         }
 
         String fileName = sha1(serialize(c));
@@ -124,6 +175,11 @@ public class Repository {
         writeObject(commitFile, c);
 
         setHeadOfBranch(fileName);
+    }
+
+    /** Returns the commit with the given hash. */
+    public static Commit readCommitFromHash(String hash) {
+        return readObject(join(COMMIT_DIR, hash), Commit.class);
     }
 
     /** Adds a branch. */
@@ -227,25 +283,19 @@ public class Repository {
 
         System.out.println("===");
         System.out.println("commit " + cID);
-        System.out.println("Date: " + String.format(Locale.ENGLISH, "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
+        System.out.println("Date: " + String.format(Locale.ENGLISH,
+                "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
         System.out.println(c.getMessage());
         System.out.println();
     }
 
     /** Outputs the status. */
     public static void outputStatus() {
-        // TODO: fill in this function
         outputBranches();
-
         outputStagedFiles();
-
-
-
-        System.out.println("=== Removed Files ===");
-
-        System.out.println("=== Modifications Not Staged For Commit ===");
-
-        System.out.println("=== Untracked Files ===");
+        outputRemovedFiles();
+        outputModificationsNotStagedForCommit();
+        outputUntrackedFiles();
     }
 
     /** Outputs the branches. */
@@ -255,26 +305,56 @@ public class Repository {
         String headbranch = getHeadBranch();
         List<String> branches = plainFilenamesIn(BRANCH_DIR);
         if (branches != null) {
-            Collections.sort(branches);
             for (String curBranch : branches) {
                 if (curBranch.equals(headbranch)) {
                     System.out.print("*");
                 }
                 System.out.println(curBranch);
             }
-            System.out.println();
         }
+        System.out.println();
     }
 
     /** Outputs staged files. */
     public static void outputStagedFiles() {
         System.out.println("=== Staged Files ===");
-        List<String> addFiles = plainFilenamesIn(STAGING_DIR);
+        List<String> addFiles = plainFilenamesIn(STAGEADD);
         if (addFiles != null) {
             for (String fileName : addFiles) {
                 System.out.println(fileName);
             }
         }
+        System.out.println();
+    }
+
+    /** Outputs removed files. */
+    public static void outputRemovedFiles() {
+        System.out.println("=== Removed Files ===");
+        List<String> rmFiles = plainFilenamesIn(STAGERM);
+        if (rmFiles != null) {
+            for (String fileName : rmFiles) {
+                System.out.println(fileName);
+            }
+        }
+        System.out.println();
+    }
+
+    /** Outputs modifications not staged for commit. */
+    public static void outputModificationsNotStagedForCommit() {
+        // TODO: fill in this function
+        System.out.println("=" + "== Modifications Not Staged For Commit ===");
+
+
+        System.out.println();
+    }
+
+    /** Outputs untracked files. */
+    public static void outputUntrackedFiles() {
+        // TODO: fill in this function
+        System.out.println("=== Untracked Files ===");
+
+
+        System.out.println();
     }
 
     /** Gets the current head. */
