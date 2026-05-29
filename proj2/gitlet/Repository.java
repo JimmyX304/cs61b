@@ -254,19 +254,35 @@ public class Repository {
     public static void checkoutCommit(String commitID) throws IOException {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
-            removeFilesInDir(STAGEADD);
-            removeFilesInDir(STAGERM);
+            Commit c = readObject(commitFile, Commit.class);
 
+            Map<String, String> trackedFiles = c.getTrackedFiles();
             Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
-            for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
-                File rmFile = join(CWD, entry.getKey());
-                if (rmFile.exists()) {
-                    rmFile.delete();
+
+            List<String> allFiles = plainFilenamesIn(CWD);
+
+            for (String fileName : allFiles) {
+                boolean trackedInCurrent = rmFiles.containsKey(fileName);
+                boolean trackedInTarget = trackedFiles.containsKey(fileName);
+
+                if (!trackedInCurrent && trackedInTarget) {
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
+                    System.exit(0);
                 }
             }
 
-            Commit c = readObject(commitFile, Commit.class);
-            Map<String, String> trackedFiles = c.getTrackedFiles();
+            removeFilesInDir(STAGEADD);
+            removeFilesInDir(STAGERM);
+
+            for (String fileName : rmFiles.keySet()) {
+                if (!trackedFiles.containsKey(fileName)) {
+                    File rmFile = join(CWD, fileName);
+                    if (rmFile.exists()) {
+                        rmFile.delete();
+                    }
+                }
+            }
 
             for (Map.Entry<String, String> fileStored : trackedFiles.entrySet()) {
                 checkout(commitID, fileStored.getKey());
