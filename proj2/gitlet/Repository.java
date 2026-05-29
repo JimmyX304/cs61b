@@ -388,7 +388,79 @@ public class Repository {
             System.exit(0);
         }
 
+        Commit splitPointCommit = readObject(join(COMMIT_DIR, lca), Commit.class);
 
+        Map<String, String> currentBranchFiles = getHeadCommit().getTrackedFiles();
+        Map<String, String> givenBranchFiles = getHeadCommitOfBranch(branchName).getTrackedFiles();
+        Map<String, String> splitPointFiles = splitPointCommit.getTrackedFiles();
+        for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
+            String fileName = cur.getKey();
+            String blobID = cur.getValue();
+            boolean b1 = false, b2 = false;
+            if (currentBranchFiles.containsKey(fileName)) {
+                if (currentBranchFiles.get(fileName).equals(blobID)) {
+                    b1 = true;
+                }
+            }
+
+            if (givenBranchFiles.containsKey(fileName)) {
+                if (givenBranchFiles.get(fileName).equals(blobID)) {
+                    b2 = true;
+                }
+            }
+
+            if (b1 && !b2) {
+                checkout(getHeadOfBranch(branchName), fileName);
+                addToStage(fileName);
+            }
+        }
+
+        for (Map.Entry<String, String> cur : givenBranchFiles.entrySet()) {
+            String fileName = cur.getKey();
+            boolean b1 = false, b2 = false;
+            if (splitPointFiles.containsKey(fileName)) {
+                b1 = true;
+            }
+            if (currentBranchFiles.containsKey(fileName)) {
+                b2 = true;
+            }
+            if (!b1 && !b2) {
+                checkout(getHeadOfBranch(branchName), fileName);
+                addToStage(fileName);
+            }
+        }
+
+        for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
+            String fileName = cur.getKey();
+            String blobID = cur.getValue();
+            boolean b1 = false, b2 = false;
+            if (currentBranchFiles.containsKey(fileName)) {
+                if (currentBranchFiles.get(fileName).equals(blobID)) {
+                    b1 = true;
+                }
+            }
+            if (givenBranchFiles.containsKey(fileName)) {
+                b2 = true;
+            }
+            if (b1 && !b2) {
+                removeFile(fileName);
+            }
+        }
+
+        List<String> filesToChange =
+                getFilesForMerge(currentBranchFiles, givenBranchFiles, splitPointFiles);
+
+        for (String fileName : filesToChange) {
+            String contents1 = getContentsOfFile(fileName, currentBranchFiles);
+            String contents2 = getContentsOfFile(fileName, givenBranchFiles);
+            File f = join(CWD, fileName);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+            writeContents(f, "<<<<<<< HEAD\n" + contents1 + "=======\n" + contents2 + ">>>>>>>\n");
+        }
+
+        makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".");
     }
 
     /** Checks base cases for merge. */
@@ -409,13 +481,67 @@ public class Repository {
         }
     }
 
-    /** Sets the head to the given branch. */
-    public static void setBranch(String branchName) throws IOException {
-        File branch = join(BRANCH_DIR, branchName);
-        if (!branch.exists()) {
-            branch.createNewFile();
+    /** Gets files modified in different ways in current and given branches. */
+    public static List<String> getFilesForMerge(Map<String, String> currentBranchFiles,
+                                        Map<String, String> givenBranchFiles,
+                                        Map<String, String> splitPointFiles) {
+        List<String> validFiles = new LinkedList<>();
+
+        Set<String> allFileNames = new TreeSet<>();
+        for (Map.Entry<String, String> cur : currentBranchFiles.entrySet()) {
+            allFileNames.add(cur.getKey());
         }
-        setHeadToBranch(branchName);
+        for (Map.Entry<String, String> cur : givenBranchFiles.entrySet()) {
+            allFileNames.add(cur.getKey());
+        }
+        for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
+            allFileNames.add(cur.getKey());
+        }
+
+        for (String fileName : allFileNames) {
+            if (splitPointFiles.containsKey(fileName)) {
+                if (currentBranchFiles.containsKey(fileName)) {
+                    if (givenBranchFiles.containsKey(fileName)) {
+                        String blob1 = currentBranchFiles.get(fileName);
+                        String blob2 = givenBranchFiles.get(fileName);
+                        String blob3 = splitPointFiles.get(fileName);
+                        if (!blob1.equals(blob2)) {
+                            if (!blob1.equals(blob3)) {
+                                if (!blob2.equals(blob3)) {
+                                    validFiles.add(fileName);
+                                }
+                            }
+                        }
+                    } else {
+                        String blob1 = currentBranchFiles.get(fileName);
+                        String blob3 = splitPointFiles.get(fileName);
+                        if (!blob1.equals(blob3)) {
+                            validFiles.add(fileName);
+                        }
+                    }
+                } else {
+                    if (givenBranchFiles.containsKey(fileName)) {
+                        String blob2 = givenBranchFiles.get(fileName);
+                        String blob3 = splitPointFiles.get(fileName);
+                        if (!blob2.equals(blob3)) {
+                            validFiles.add(fileName);
+                        }
+                    }
+                }
+            } else {
+                if (currentBranchFiles.containsKey(fileName)) {
+                    if (givenBranchFiles.containsKey(fileName)) {
+                        String blob1 = currentBranchFiles.get(fileName);
+                        String blob2 = givenBranchFiles.get(fileName);
+                        if (!blob1.equals(blob2)) {
+                            validFiles.add(fileName);
+                        }
+                    }
+                }
+            }
+        }
+
+        return validFiles;
     }
 
     public static void getCommitsWithMessage(String commitMessage) {
@@ -544,6 +670,15 @@ public class Repository {
             for (String f : files) {
                 join(dir, f).delete();
             }
+        }
+    }
+
+    /** Gets the contents of a file. */
+    public static String getContentsOfFile(String fileName, Map<String, String> mp) {
+        if (mp.containsKey(fileName)) {
+            return readObject(join(BLOB_DIR, mp.get(fileName)), Blob.class).getContents();
+        } else {
+            return "\n";
         }
     }
 
