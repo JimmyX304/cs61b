@@ -292,7 +292,11 @@ public class Repository {
                 List<String> allFiles = plainFilenamesIn(CWD);
 
                 for (String fileName : allFiles) {
-                    if (trackedFiles.containsKey(fileName)) {
+
+                    boolean trackedInCurrent = rmFiles.containsKey(fileName);
+                    boolean trackedInTarget = trackedFiles.containsKey(fileName);
+
+                    if (!trackedInCurrent && trackedInTarget) {
                         System.out.println("There is an untracked file in the way; "
                                 + "delete it, or add and commit it first.");
                         System.exit(0);
@@ -302,15 +306,20 @@ public class Repository {
                 removeFilesInDir(STAGEADD);
                 removeFilesInDir(STAGERM);
 
-                for (Map.Entry<String, String> entry : rmFiles.entrySet()) {
-                    File rmFile = join(CWD, entry.getKey());
-                    if (rmFile.exists()) {
-                        rmFile.delete();
+                for (String fileName : rmFiles.keySet()) {
+                    if (!trackedFiles.containsKey(fileName)) {
+                        File rmFile = join(CWD, fileName);
+                        if (rmFile.exists()) {
+                            rmFile.delete();
+                        }
                     }
                 }
 
                 for (Map.Entry<String, String> fileStored : trackedFiles.entrySet()) {
                     File updateFile = join(CWD, fileStored.getKey());
+                    if (!updateFile.exists()) {
+                        updateFile.createNewFile();
+                    }
                     Blob b = readObject(join(BLOB_DIR, fileStored.getValue()), Blob.class);
                     writeContents(updateFile, b.getContents());
                 }
