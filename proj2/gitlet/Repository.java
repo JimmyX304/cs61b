@@ -102,7 +102,7 @@ public class Repository {
         File currentFile = join(CWD, fileName);
 
         if (newFile.exists()) {
-            if (Arrays.equals(readContents(newFile), readContents(currentFile))) {
+            if (readContentsAsString(newFile).equals(readContentsAsString(currentFile))) {
                 newFile.delete();
             }
         }
@@ -115,7 +115,7 @@ public class Repository {
         }
 
         newFile.createNewFile();
-        writeObject(newFile, readContentsAsString(currentFile));
+        writeContents(newFile, readContentsAsString(currentFile));
 
         return true;
     }
@@ -373,7 +373,6 @@ public class Repository {
 
     /** Merges the current branch with the one given. */
     public static void mergeBranch(String branchName) throws IOException {
-
         checkBaseCasesForMerge(branchName);
 
         String lca = getLCA(getHeadBranch(), branchName);
@@ -383,7 +382,8 @@ public class Repository {
         }
 
         if (lca.equals(getHead())) {
-            checkoutBranch(branchName);
+            checkoutCommit(getHeadOfBranch(branchName));
+            writeContents(join(BRANCH_DIR, getHeadBranch()), getHeadOfBranch(branchName));
             System.out.println("Current branch fast-forwarded.");
             System.exit(0);
         }
@@ -409,9 +409,15 @@ public class Repository {
                 }
             }
 
-            if (b1 && !b2) {
-                checkout(getHeadOfBranch(branchName), fileName);
-                addToStage(fileName);
+            if (b1) {
+                if (givenBranchFiles.containsKey(fileName)) {
+                    if (!b2) {
+                        checkout(getHeadOfBranch(branchName), fileName);
+                        addToStage(fileName);
+                    }
+                } else {
+                    removeFile(fileName);
+                }
             }
         }
 
@@ -430,23 +436,6 @@ public class Repository {
             }
         }
 
-        for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
-            String fileName = cur.getKey();
-            String blobID = cur.getValue();
-            boolean b1 = false, b2 = false;
-            if (currentBranchFiles.containsKey(fileName)) {
-                if (currentBranchFiles.get(fileName).equals(blobID)) {
-                    b1 = true;
-                }
-            }
-            if (givenBranchFiles.containsKey(fileName)) {
-                b2 = true;
-            }
-            if (b1 && !b2) {
-                removeFile(fileName);
-            }
-        }
-
         List<String> filesToChange =
                 getFilesForMerge(currentBranchFiles, givenBranchFiles, splitPointFiles);
 
@@ -457,7 +446,8 @@ public class Repository {
             if (!f.exists()) {
                 f.createNewFile();
             }
-            writeContents(f, "<<<<<<< HEAD\n" + contents1 + "=======\n" + contents2 + ">>>>>>>\n");
+            writeContents(f, "<<<<<<< HEAD\n" + contents1 + "\n=======\n" + contents2 + "\n>>>>>>>\n");
+            addToStage(fileName);
         }
 
         makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".");
@@ -465,7 +455,7 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
-        if (plainFilenamesIn(STAGEADD) != null || plainFilenamesIn(STAGERM) != null) {
+        if (!plainFilenamesIn(STAGEADD).isEmpty() || !plainFilenamesIn(STAGERM).isEmpty()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
         }
@@ -678,7 +668,7 @@ public class Repository {
         if (mp.containsKey(fileName)) {
             return readObject(join(BLOB_DIR, mp.get(fileName)), Blob.class).getContents();
         } else {
-            return "\n";
+            return "";
         }
     }
 
