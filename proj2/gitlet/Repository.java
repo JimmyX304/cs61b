@@ -230,7 +230,18 @@ public class Repository {
 
     /** Restores a file in a given commit. */
     public static void checkout(String commitID, String fileName) throws IOException {
+
         File commitFile = join(COMMIT_DIR, commitID);
+
+        if (commitID.length() < 40) {
+            for (String comID : plainFilenamesIn(COMMIT_DIR)) {
+                if (comID.substring(0, commitID.length()).equals(commitID)) {
+                    commitFile = join(COMMIT_DIR, comID);
+                    break;
+                }
+            }
+        }
+
         if (commitFile.exists()) {
             Commit c = readObject(commitFile, Commit.class);
             Blob b = c.getBlob(fileName);
