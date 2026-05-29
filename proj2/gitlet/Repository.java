@@ -371,28 +371,13 @@ public class Repository {
         return null;
     }
 
-    /** Merges the current branch with the one given. */
-    public static void mergeBranch(String branchName) throws IOException {
-        checkBaseCasesForMerge(branchName);
-
-        String lca = getLCA(getHeadBranch(), branchName);
-        if (lca.equals(getHeadOfBranch(branchName))) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            System.exit(0);
-        }
-
-        if (lca.equals(getHead())) {
-            checkoutCommit(getHeadOfBranch(branchName));
-            writeContents(join(BRANCH_DIR, getHeadBranch()), getHeadOfBranch(branchName));
-            System.out.println("Current branch fast-forwarded.");
-            System.exit(0);
-        }
-
-        Commit splitPointCommit = readObject(join(COMMIT_DIR, lca), Commit.class);
-
+    /** Merge steps 1, 6. */
+    public static void mergeSteps16(String branchName, String splitName) throws IOException {
+        Commit splitPointCommit = readObject(join(COMMIT_DIR, splitName), Commit.class);
         Map<String, String> currentBranchFiles = getHeadCommit().getTrackedFiles();
         Map<String, String> givenBranchFiles = getHeadCommitOfBranch(branchName).getTrackedFiles();
         Map<String, String> splitPointFiles = splitPointCommit.getTrackedFiles();
+
         for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
             String fileName = cur.getKey();
             String blobID = cur.getValue();
@@ -420,6 +405,14 @@ public class Repository {
                 }
             }
         }
+    }
+
+    /** Merge steps 5. */
+    public static void mergeSteps5(String branchName, String splitName) throws IOException {
+        Commit splitPointCommit = readObject(join(COMMIT_DIR, splitName), Commit.class);
+        Map<String, String> currentBranchFiles = getHeadCommit().getTrackedFiles();
+        Map<String, String> givenBranchFiles = getHeadCommitOfBranch(branchName).getTrackedFiles();
+        Map<String, String> splitPointFiles = splitPointCommit.getTrackedFiles();
 
         for (Map.Entry<String, String> cur : givenBranchFiles.entrySet()) {
             String fileName = cur.getKey();
@@ -435,6 +428,14 @@ public class Repository {
                 addToStage(fileName);
             }
         }
+    }
+
+    /** Merge steps 8. */
+    public static void mergeSteps8(String branchName, String splitName) throws IOException {
+        Commit splitPointCommit = readObject(join(COMMIT_DIR, splitName), Commit.class);
+        Map<String, String> currentBranchFiles = getHeadCommit().getTrackedFiles();
+        Map<String, String> givenBranchFiles = getHeadCommitOfBranch(branchName).getTrackedFiles();
+        Map<String, String> splitPointFiles = splitPointCommit.getTrackedFiles();
 
         List<String> filesToChange =
                 getFilesForMerge(currentBranchFiles, givenBranchFiles, splitPointFiles);
@@ -446,11 +447,43 @@ public class Repository {
             if (!f.exists()) {
                 f.createNewFile();
             }
-            writeContents(f, "<<<<<<< HEAD\n" + contents1 + "\n=======\n" + contents2 + "\n>>>>>>>\n");
+            writeContents(f,
+                    "<<<<<<< HEAD\n"
+                            + contents1
+                            + "\n=======\n"
+                            + contents2
+                            + "\n>>>>>>>\n");
             addToStage(fileName);
         }
+    }
+
+    /** Merges the current branch with the one given. */
+    public static void mergeBranch(String branchName) throws IOException {
+        checkBaseCasesForMerge(branchName);
+
+        String splitName = getLCA(getHeadBranch(), branchName);
+        checkLCA(splitName, branchName);
+
+        mergeSteps16(branchName, splitName);
+        mergeSteps5(branchName, splitName);
+        mergeSteps8(branchName, splitName);
 
         makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".");
+    }
+
+    /** Checks LCA requirements. */
+    public static void checkLCA(String splitName, String branchName) throws IOException {
+        if (splitName.equals(getHeadOfBranch(branchName))) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+
+        if (splitName.equals(getHead())) {
+            checkoutCommit(getHeadOfBranch(branchName));
+            writeContents(join(BRANCH_DIR, getHeadBranch()), getHeadOfBranch(branchName));
+            System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
+        }
     }
 
     /** Checks base cases for merge. */
@@ -472,61 +505,29 @@ public class Repository {
     }
 
     /** Gets files modified in different ways in current and given branches. */
-    public static List<String> getFilesForMerge(Map<String, String> currentBranchFiles,
-                                        Map<String, String> givenBranchFiles,
-                                        Map<String, String> splitPointFiles) {
+    public static List<String> getFilesForMerge(
+            Map<String, String> currentBranchFiles,
+            Map<String, String> givenBranchFiles,
+            Map<String, String> splitPointFiles) {
+
         List<String> validFiles = new LinkedList<>();
 
         Set<String> allFileNames = new TreeSet<>();
-        for (Map.Entry<String, String> cur : currentBranchFiles.entrySet()) {
-            allFileNames.add(cur.getKey());
-        }
-        for (Map.Entry<String, String> cur : givenBranchFiles.entrySet()) {
-            allFileNames.add(cur.getKey());
-        }
-        for (Map.Entry<String, String> cur : splitPointFiles.entrySet()) {
-            allFileNames.add(cur.getKey());
-        }
+        allFileNames.addAll(currentBranchFiles.keySet());
+        allFileNames.addAll(givenBranchFiles.keySet());
+        allFileNames.addAll(splitPointFiles.keySet());
 
         for (String fileName : allFileNames) {
-            if (splitPointFiles.containsKey(fileName)) {
-                if (currentBranchFiles.containsKey(fileName)) {
-                    if (givenBranchFiles.containsKey(fileName)) {
-                        String blob1 = currentBranchFiles.get(fileName);
-                        String blob2 = givenBranchFiles.get(fileName);
-                        String blob3 = splitPointFiles.get(fileName);
-                        if (!blob1.equals(blob2)) {
-                            if (!blob1.equals(blob3)) {
-                                if (!blob2.equals(blob3)) {
-                                    validFiles.add(fileName);
-                                }
-                            }
-                        }
-                    } else {
-                        String blob1 = currentBranchFiles.get(fileName);
-                        String blob3 = splitPointFiles.get(fileName);
-                        if (!blob1.equals(blob3)) {
-                            validFiles.add(fileName);
-                        }
-                    }
-                } else {
-                    if (givenBranchFiles.containsKey(fileName)) {
-                        String blob2 = givenBranchFiles.get(fileName);
-                        String blob3 = splitPointFiles.get(fileName);
-                        if (!blob2.equals(blob3)) {
-                            validFiles.add(fileName);
-                        }
-                    }
-                }
-            } else {
-                if (currentBranchFiles.containsKey(fileName)) {
-                    if (givenBranchFiles.containsKey(fileName)) {
-                        String blob1 = currentBranchFiles.get(fileName);
-                        String blob2 = givenBranchFiles.get(fileName);
-                        if (!blob1.equals(blob2)) {
-                            validFiles.add(fileName);
-                        }
-                    }
+
+            String current = currentBranchFiles.get(fileName);
+            String given = givenBranchFiles.get(fileName);
+            String split = splitPointFiles.get(fileName);
+
+            boolean currentModified = !Objects.equals(current, split);
+            boolean givenModified = !Objects.equals(given, split);
+            if (currentModified && givenModified) {
+                if (!Objects.equals(current, given)) {
+                    validFiles.add(fileName);
                 }
             }
         }
