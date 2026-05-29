@@ -250,10 +250,39 @@ public class Repository {
         }
     }
 
+    /** Returns a list of untracked files in the given commit. */
+    public static List<String> getUntrackedFiles(String commitID) {
+        Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
+        Map<String, String> trackedFiles = c.getTrackedFiles();
+        Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
+
+        List<String> allFiles = plainFilenamesIn(CWD);
+
+        List<String> untrackedFiles = new LinkedList<>();
+
+        for (String fileName : allFiles) {
+            boolean trackedInCurrent = rmFiles.containsKey(fileName);
+            boolean trackedInTarget = trackedFiles.containsKey(fileName);
+
+            if (!trackedInCurrent && trackedInTarget) {
+                untrackedFiles.add(fileName);
+            }
+        }
+
+        return untrackedFiles;
+    }
+
     /** Checkouts a commit. */
     public static void checkoutCommit(String commitID) throws IOException {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
+
+            if (!getUntrackedFiles(commitID).isEmpty()) {
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                System.exit(0);
+            }
+
             Commit c = readObject(commitFile, Commit.class);
 
             Map<String, String> trackedFiles = c.getTrackedFiles();
@@ -431,7 +460,7 @@ public class Repository {
     }
 
     /** Merge steps 8. */
-    public static void mergeSteps8(String branchName, String splitName) throws IOException {
+    public static boolean mergeSteps8(String branchName, String splitName) throws IOException {
         Commit splitPointCommit = readObject(join(COMMIT_DIR, splitName), Commit.class);
         Map<String, String> currentBranchFiles = getHeadCommit().getTrackedFiles();
         Map<String, String> givenBranchFiles = getHeadCommitOfBranch(branchName).getTrackedFiles();
@@ -455,6 +484,8 @@ public class Repository {
                             + "\n>>>>>>>\n");
             addToStage(fileName);
         }
+
+        return !filesToChange.isEmpty();
     }
 
     /** Merges the current branch with the one given. */
@@ -466,9 +497,12 @@ public class Repository {
 
         mergeSteps16(branchName, splitName);
         mergeSteps5(branchName, splitName);
-        mergeSteps8(branchName, splitName);
+        boolean b = mergeSteps8(branchName, splitName);
 
         makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".");
+        if (b) {
+            System.out.println("Encountered a merge conflict.");
+        }
     }
 
     /** Checks LCA requirements. */
@@ -488,6 +522,12 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
+        if (!getUntrackedFiles(getHead()).isEmpty()) {
+            System.out.println("There is an untracked file in the way; "
+                    + "delete it, or add and commit it first.");
+            System.exit(0);
+        }
+
         if (!plainFilenamesIn(STAGEADD).isEmpty() || !plainFilenamesIn(STAGERM).isEmpty()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
