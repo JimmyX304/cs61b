@@ -490,9 +490,9 @@ public class Repository {
             writeContents(f,
                     "<<<<<<< HEAD\n"
                             + contents1
-                            + "\n=======\n"
+                            + "=======\n"
                             + contents2
-                            + "\n>>>>>>>\n");
+                            + ">>>>>>>\n");
             addToStage(fileName);
         }
 
