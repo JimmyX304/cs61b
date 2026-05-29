@@ -39,6 +39,7 @@ public class Main {
                     break;
                 case "add":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     fileName = args[1];
                     if (!Repository.addToStage(fileName)) {
@@ -51,6 +52,7 @@ public class Main {
                     if (length == 1 || args[1].isBlank()) {
                         System.out.println("Please enter a commit message.");
                     } else if (length == 2) {
+                        validateRepoExists();
                         String msg = args[1];
                         Repository.makeCommit(msg);
                     } else {
@@ -59,6 +61,7 @@ public class Main {
                     break;
                 case "rm":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     fileName = args[1];
                     Repository.removeFile(fileName);
@@ -66,18 +69,21 @@ public class Main {
                     break;
                 case "log":
                     validateNumArgs(length, 1);
+                    validateRepoExists();
 
                     Repository.outputLog();
 
                     break;
                 case "global-log":
                     validateNumArgs(length, 1);
+                    validateRepoExists();
 
                     Repository.outputGlobalLog();
 
                     break;
                 case "find":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     String commitMessage = args[1];
                     Repository.getCommitsWithMessage(commitMessage);
@@ -85,6 +91,7 @@ public class Main {
                     break;
                 case "status":
                     validateNumArgs(length, 1);
+                    validateRepoExists();
 
                     Repository.outputStatus();
 
@@ -93,6 +100,7 @@ public class Main {
                     if (length == 2) {
                         // operation 3
 
+                        validateRepoExists();
                         branchName = args[1];
                         Repository.checkoutBranch(branchName);
 
@@ -100,6 +108,7 @@ public class Main {
                         // operation 1
 
                         if (args[1].equals("--")) {
+                            validateRepoExists();
                             fileName = args[2];
                             Repository.checkout(Repository.getHead(), fileName);
                         } else {
@@ -109,6 +118,7 @@ public class Main {
                         // operation 2
 
                         if (args[2].equals("--")) {
+                            validateRepoExists();
                             fileName = args[3];
                             Repository.checkout(args[1], fileName);
                         } else {
@@ -121,6 +131,7 @@ public class Main {
                     break;
                 case "branch":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     branchName = args[1];
                     Repository.addBranch(branchName);
@@ -128,6 +139,7 @@ public class Main {
                     break;
                 case "rm-branch":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     branchName = args[1];
                     Repository.removeBranch(branchName);
@@ -135,14 +147,17 @@ public class Main {
                     break;
                 case "reset":
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
                     Repository.checkoutCommit(args[1]);
 
                     break;
                 case "merge":
-                    // TODO: fill in this case
                     validateNumArgs(length, 2);
+                    validateRepoExists();
 
+                    branchName = args[1];
+                    Repository.mergeBranch(branchName);
 
                     break;
                 default:
@@ -158,6 +173,14 @@ public class Main {
     public static void validateNumArgs(int l, int correct) {
         if (l != correct) {
             System.out.println("Incorrect operands.");
+            System.exit(0);
+        }
+    }
+
+    /** Validates the repository exists. */
+    public static void validateRepoExists() {
+        if (!Repository.fileExists(".gitlet")) {
+            System.out.println("Not in an initialized Gitlet directory.");
             System.exit(0);
         }
     }

@@ -351,6 +351,64 @@ public class Repository {
         }
     }
 
+    /** Gets the latest common ancestor of two branches. */
+    public static String getLCA(String branch1, String branch2) {
+        HashSet<String> commits = new HashSet<>();
+        String pointer = getHeadOfBranch(branch1);
+        while (!pointer.isEmpty()) {
+            commits.add(pointer);
+            pointer = readObject(join(COMMIT_DIR, pointer), Commit.class).getParent();
+        }
+
+        String p2 = getHeadOfBranch(branch2);
+        while (!p2.isEmpty()) {
+            if (commits.contains(p2)) {
+                return p2;
+            }
+            p2 = readObject(join(COMMIT_DIR, p2), Commit.class).getParent();
+        }
+
+        return null;
+    }
+
+    /** Merges the current branch with the one given. */
+    public static void mergeBranch(String branchName) throws IOException {
+
+        checkBaseCasesForMerge(branchName);
+
+        String lca = getLCA(getHeadBranch(), branchName);
+        if (lca.equals(getHeadOfBranch(branchName))) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+
+        if (lca.equals(getHead())) {
+            checkoutBranch(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
+        }
+
+
+    }
+
+    /** Checks base cases for merge. */
+    public static void checkBaseCasesForMerge(String branchName) {
+        if (plainFilenamesIn(STAGEADD) != null || plainFilenamesIn(STAGERM) != null) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+
+        if (!join(BRANCH_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+
+        if (branchName.equals(getHeadBranch())) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+    }
+
     /** Sets the head to the given branch. */
     public static void setBranch(String branchName) throws IOException {
         File branch = join(BRANCH_DIR, branchName);
