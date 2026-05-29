@@ -99,15 +99,21 @@ public class Main {
                     } else if (length == 3) {
                         // operation 1
 
-                        fileName = args[2];
-                        Repository.checkout(Repository.getHead(), fileName);
-
+                        if (args[1].equals("--")) {
+                            fileName = args[2];
+                            Repository.checkout(Repository.getHead(), fileName);
+                        } else {
+                            validateNumArgs(length, 100);
+                        }
                     } else if (length == 4) {
                         // operation 2
 
-                        fileName = args[3];
-                        Repository.checkout(args[1], fileName);
-
+                        if (args[2].equals("--")) {
+                            fileName = args[3];
+                            Repository.checkout(args[1], fileName);
+                        } else {
+                            validateNumArgs(length, 100);
+                        }
                     } else {
                         System.out.println("Incorrect operands.");
                         System.exit(0);

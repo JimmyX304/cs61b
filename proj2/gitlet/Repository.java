@@ -229,13 +229,16 @@ public class Repository {
     }
 
     /** Restores a file in a given commit. */
-    public static void checkout(String commitID, String fileName) {
+    public static void checkout(String commitID, String fileName) throws IOException {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
             Commit c = readObject(commitFile, Commit.class);
             Blob b = c.getBlob(fileName);
             if (b != null) {
                 File origFile = join(CWD, fileName);
+                if (!origFile.exists()) {
+                    origFile.createNewFile();
+                }
                 writeContents(origFile, b.getContents());
             } else {
                 System.out.println("File does not exist in that commit.");
@@ -248,7 +251,7 @@ public class Repository {
     }
 
     /** Checkouts a commit. */
-    public static void checkoutCommit(String commitID) {
+    public static void checkoutCommit(String commitID) throws IOException {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
             removeFilesInDir(STAGEADD);
@@ -290,12 +293,12 @@ public class Repository {
 
                 for (String fileName : allFiles) {
                     if (trackedFiles.containsKey(fileName)) {
-                        System.out.println("There is an untracked file in the way; " +
-                                "delete it, or add and commit it first.");
+                        System.out.println("There is an untracked file in the way; "
+                                + "delete it, or add and commit it first.");
                         System.exit(0);
                     }
                 }
-                
+
                 removeFilesInDir(STAGEADD);
                 removeFilesInDir(STAGERM);
 
