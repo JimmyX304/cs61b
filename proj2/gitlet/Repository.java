@@ -533,7 +533,7 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
-        if (!getUntrackedFiles(getHead()).isEmpty()) {
+        if (!getUntrackedFiles(getHeadOfBranch(branchName)).isEmpty()) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
             System.exit(0);
@@ -631,6 +631,10 @@ public class Repository {
 
         System.out.println("===");
         System.out.println("commit " + cID);
+        if (c.getSecondParent() != null) {
+            System.out.println("Merge: " + c.getParent().substring(0, 7) + " "
+                                        + c.getSecondParent().substring(0, 7));
+        }
         System.out.println("Date: " + String.format(Locale.ENGLISH,
                 "%ta %tb %te %tT %tY %tz", d, d, d, d, d, d));
         System.out.println(c.getMessage());
@@ -692,6 +696,44 @@ public class Repository {
         // EC: fill in this function
         System.out.println("=" + "== Modifications Not Staged For Commit ===");
 
+        Set<String> validFiles = new TreeSet<>();
+        HashSet<String> stagedAddFiles = new HashSet<>(plainFilenamesIn(STAGEADD));
+        HashSet<String> stagedRemoveFiles = new HashSet<>(plainFilenamesIn(STAGERM));
+        Map<String, String> filesInHeadCommit = getHeadCommit().getTrackedFiles();
+
+        for (String fileName : stagedAddFiles) {
+            File f = join(CWD, fileName);
+            File stageFile = join(STAGEADD, fileName);
+            if (f.exists()) {
+                if (!readContentsAsString(f).equals(readContentsAsString(stageFile))) {
+                    validFiles.add(fileName + " (modified)");
+                }
+            } else {
+                validFiles.add(fileName + " (deleted)");
+            }
+        }
+
+        for (Map.Entry<String, String> entry : filesInHeadCommit.entrySet()) {
+            String fileName = entry.getKey();
+            String blobID = entry.getValue();
+            Blob b = readObject(join(BLOB_DIR, blobID), Blob.class);
+            File f = join(CWD, fileName);
+            if (f.exists()) {
+                if (!readContentsAsString(f).equals(b.getContents())) {
+                    if (!stagedAddFiles.contains(fileName)) {
+                        validFiles.add(fileName + " (modified)");
+                    }
+                }
+            } else {
+                if (!stagedRemoveFiles.contains(fileName)) {
+                    validFiles.add(fileName + " (deleted)");
+                }
+            }
+        }
+
+        for (String fileName : validFiles) {
+            System.out.println(fileName);
+        }
 
         System.out.println();
     }
@@ -701,6 +743,12 @@ public class Repository {
         // EC: fill in this function
         System.out.println("=== Untracked Files ===");
 
+        List<String> untracked = getUntrackedFiles(getHead());
+        Collections.sort(untracked);
+
+        for (String f : untracked) {
+            System.out.println(f);
+        }
 
         System.out.println();
     }

@@ -25,6 +25,8 @@ public class Commit implements Serializable {
     private Date date;
     /** The parent of this commit, stored as a SHA1 hash. */
     private String parent;
+    /** The second parent of this commit. Null if there is no second parent. */
+    private String parent2;
 
     /** All files tracked by this commit. */
     private HashMap<String, String> trackedFiles = new HashMap<>();
@@ -36,6 +38,7 @@ public class Commit implements Serializable {
         this.message = message;
         this.date = new Date();
         this.parent = par;
+        this.parent2 = null;
         if (par.equals("")) {
             this.date = new Date(0);
         } else {
@@ -70,6 +73,11 @@ public class Commit implements Serializable {
     /** Gets the parent of the Commit. */
     public String getParent() {
         return parent;
+    }
+
+    /** Gets the second parent of the Commit. */
+    public String getSecondParent() {
+        return parent2;
     }
 
     /** Gets the tracked files of the Commit. */
