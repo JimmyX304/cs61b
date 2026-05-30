@@ -38,7 +38,7 @@ public class Commit implements Serializable {
         this.message = message;
         this.date = new Date();
         this.parent = par;
-        this.parent2 = null;
+        this.parent2 = "";
         if (par.equals("")) {
             this.date = new Date(0);
         } else {
