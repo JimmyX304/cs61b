@@ -264,18 +264,18 @@ public class Repository {
     /** Returns a list of untracked files in the given commit. */
     public static List<String> getUntrackedFiles(String commitID) {
         Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
-        Map<String, String> trackedFiles = c.getTrackedFiles();
-        Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
+        HashSet<String> addFiles = new HashSet<>(plainFilenamesIn(STAGEADD));
+        Map<String, String> commitFiles = c.getTrackedFiles();
 
         List<String> allFiles = plainFilenamesIn(CWD);
 
         List<String> untrackedFiles = new LinkedList<>();
 
         for (String fileName : allFiles) {
-            boolean trackedInCurrent = rmFiles.containsKey(fileName);
-            boolean trackedInTarget = trackedFiles.containsKey(fileName);
+            boolean trackedInAdd = addFiles.contains(fileName);
+            boolean trackedInCommit = commitFiles.containsKey(fileName);
 
-            if (!trackedInCurrent && trackedInTarget) {
+            if (!trackedInAdd && !trackedInCommit) {
                 untrackedFiles.add(fileName);
             }
         }
@@ -533,6 +533,11 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
+        if (!join(BRANCH_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+
         if (!getUntrackedFiles(getHeadOfBranch(branchName)).isEmpty()) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
@@ -541,11 +546,6 @@ public class Repository {
 
         if (!plainFilenamesIn(STAGEADD).isEmpty() || !plainFilenamesIn(STAGERM).isEmpty()) {
             System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-
-        if (!join(BRANCH_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
 
