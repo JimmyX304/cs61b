@@ -261,71 +261,20 @@ public class Repository {
         }
     }
 
-    /** Returns a list of untracked files in the current working directory 
-     * relative to the HEAD commit. */
-    public static List<String> getUntrackedFiles() {
-        Commit c = getHeadCommit();
-        
-        List<String> stagedAddList = plainFilenamesIn(STAGEADD);
-        HashSet<String> addFiles = new HashSet<>();
-        if (stagedAddList != null) {
-            addFiles.addAll(stagedAddList);
-        }
-
-        List<String> stagedRemoveList = plainFilenamesIn(STAGERM);
-        HashSet<String> removeFiles = new HashSet<>();
-        if (stagedRemoveList != null) {
-            removeFiles.addAll(stagedRemoveList);
-        }
-
-        Map<String, String> commitFiles = c.getTrackedFiles();
-        List<String> allFiles = plainFilenamesIn(CWD);
-        List<String> untrackedFiles = new LinkedList<>();
-
-        if (allFiles != null) {
-            for (String fileName : allFiles) {
-                boolean trackedInAdd = addFiles.contains(fileName);
-                boolean trackedInCommit = commitFiles.containsKey(fileName);
-                boolean trackedInRemove = removeFiles.contains(fileName);
-
-                if ((!trackedInAdd && !trackedInCommit) || trackedInRemove) {
-                    untrackedFiles.add(fileName);
-                }
-            }
-        }
-
-        Collections.sort(untrackedFiles);
-        return untrackedFiles;
-    }
-
     /** Checkouts a commit. */
     public static void checkoutCommit(String commitID) throws IOException {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
 
-            if (!getUntrackedFiles().isEmpty()) {
+            if (untrackedFileError(commitID)) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 System.exit(0);
             }
 
             Commit c = readObject(commitFile, Commit.class);
-
             Map<String, String> trackedFiles = c.getTrackedFiles();
             Map<String, String> rmFiles = getHeadCommit().getTrackedFiles();
-
-            List<String> allFiles = plainFilenamesIn(CWD);
-
-            for (String fileName : allFiles) {
-                boolean trackedInCurrent = rmFiles.containsKey(fileName);
-                boolean trackedInTarget = trackedFiles.containsKey(fileName);
-
-                if (!trackedInCurrent && trackedInTarget) {
-                    System.out.println("There is an untracked file in the way; "
-                            + "delete it, or add and commit it first.");
-                    System.exit(0);
-                }
-            }
 
             removeFilesInDir(STAGEADD);
             removeFilesInDir(STAGERM);
@@ -404,6 +353,60 @@ public class Repository {
             System.out.println("No such branch exists.");
             System.exit(0);
         }
+    }
+
+    /** Checks if untracked files produce any errors. */
+    public static boolean untrackedFileError(String commitID) {
+        List<String> untrackedFiles = getUntrackedFiles();
+        Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
+
+        for (String fileName : untrackedFiles) {
+            if (c.isTracked(fileName)) {
+                Blob blobID = c.getBlob(fileName);
+                if (!readContentsAsString(join(CWD, fileName)).equals(blobID.getContents())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /** Returns a list of untracked files in the current working directory
+     * relative to the HEAD commit. */
+    public static List<String> getUntrackedFiles() {
+        Commit c = getHeadCommit();
+
+        List<String> stagedAddList = plainFilenamesIn(STAGEADD);
+        HashSet<String> addFiles = new HashSet<>();
+        if (stagedAddList != null) {
+            addFiles.addAll(stagedAddList);
+        }
+
+        List<String> stagedRemoveList = plainFilenamesIn(STAGERM);
+        HashSet<String> removeFiles = new HashSet<>();
+        if (stagedRemoveList != null) {
+            removeFiles.addAll(stagedRemoveList);
+        }
+
+        Map<String, String> commitFiles = c.getTrackedFiles();
+        List<String> allFiles = plainFilenamesIn(CWD);
+        List<String> untrackedFiles = new LinkedList<>();
+
+        if (allFiles != null) {
+            for (String fileName : allFiles) {
+                boolean trackedInAdd = addFiles.contains(fileName);
+                boolean trackedInCommit = commitFiles.containsKey(fileName);
+                boolean trackedInRemove = removeFiles.contains(fileName);
+
+                if ((!trackedInAdd && !trackedInCommit) || trackedInRemove) {
+                    untrackedFiles.add(fileName);
+                }
+            }
+        }
+
+        Collections.sort(untrackedFiles);
+        return untrackedFiles;
     }
 
     /** Gets the latest common ancestor of two branches. */
@@ -548,7 +551,7 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
-        if (!getUntrackedFiles().isEmpty()) {
+        if (untrackedFileError(getHead())) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
             System.exit(0);
