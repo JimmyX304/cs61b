@@ -412,18 +412,28 @@ public class Repository {
     /** Gets the latest common ancestor of two branches. */
     public static String getLCA(String branch1, String branch2) {
         HashSet<String> commits = new HashSet<>();
-        String pointer = getHeadOfBranch(branch1);
-        while (!pointer.isEmpty()) {
-            commits.add(pointer);
-            pointer = readObject(join(COMMIT_DIR, pointer), Commit.class).getParent();
+
+        Queue<String> q = new ArrayDeque<>();
+        q.add(getHeadOfBranch(branch1));
+        while (!q.isEmpty()) {
+            commits.add(q.peek());
+            String ptr = readObject(join(COMMIT_DIR, q.poll()), Commit.class).getParent();
+            if (!ptr.isEmpty()) {
+                q.add(ptr);
+            }
         }
 
-        String p2 = getHeadOfBranch(branch2);
-        while (!p2.isEmpty()) {
-            if (commits.contains(p2)) {
-                return p2;
+        Queue<String> q2 = new ArrayDeque<>();
+        q2.add(getHeadOfBranch(branch2));
+
+        while (!q2.isEmpty()) {
+            if (commits.contains(q.peek())) {
+                return q.peek();
             }
-            p2 = readObject(join(COMMIT_DIR, p2), Commit.class).getParent();
+            String nxt = readObject(join(COMMIT_DIR, q2.poll()), Commit.class).getParent();
+            if (!nxt.isEmpty()) {
+                q2.add(nxt);
+            }
         }
 
         return null;
@@ -551,14 +561,14 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
-        if (untrackedFileError(getHead())) {
-            System.out.println("There is an untracked file in the way; "
-                    + "delete it, or add and commit it first.");
+        if (!join(BRANCH_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
 
-        if (!join(BRANCH_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
+        if (untrackedFileError(getHeadOfBranch(branchName))) {
+            System.out.println("There is an untracked file in the way; "
+                    + "delete it, or add and commit it first.");
             System.exit(0);
         }
 
