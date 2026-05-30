@@ -261,25 +261,40 @@ public class Repository {
         }
     }
 
-    /** Returns a list of untracked files in the given commit. */
-    public static List<String> getUntrackedFiles(String commitID) {
-        Commit c = readObject(join(COMMIT_DIR, commitID), Commit.class);
-        HashSet<String> addFiles = new HashSet<>(plainFilenamesIn(STAGEADD));
+    /** Returns a list of untracked files in the current working directory 
+     * relative to the HEAD commit. */
+    public static List<String> getUntrackedFiles() {
+        Commit c = getHeadCommit();
+        
+        List<String> stagedAddList = plainFilenamesIn(STAGEADD);
+        HashSet<String> addFiles = new HashSet<>();
+        if (stagedAddList != null) {
+            addFiles.addAll(stagedAddList);
+        }
+
+        List<String> stagedRemoveList = plainFilenamesIn(STAGERM);
+        HashSet<String> removeFiles = new HashSet<>();
+        if (stagedRemoveList != null) {
+            removeFiles.addAll(stagedRemoveList);
+        }
+
         Map<String, String> commitFiles = c.getTrackedFiles();
-
         List<String> allFiles = plainFilenamesIn(CWD);
-
         List<String> untrackedFiles = new LinkedList<>();
 
-        for (String fileName : allFiles) {
-            boolean trackedInAdd = addFiles.contains(fileName);
-            boolean trackedInCommit = commitFiles.containsKey(fileName);
+        if (allFiles != null) {
+            for (String fileName : allFiles) {
+                boolean trackedInAdd = addFiles.contains(fileName);
+                boolean trackedInCommit = commitFiles.containsKey(fileName);
+                boolean trackedInRemove = removeFiles.contains(fileName);
 
-            if (!trackedInAdd && !trackedInCommit) {
-                untrackedFiles.add(fileName);
+                if ((!trackedInAdd && !trackedInCommit) || trackedInRemove) {
+                    untrackedFiles.add(fileName);
+                }
             }
         }
 
+        Collections.sort(untrackedFiles);
         return untrackedFiles;
     }
 
@@ -288,7 +303,7 @@ public class Repository {
         File commitFile = join(COMMIT_DIR, commitID);
         if (commitFile.exists()) {
 
-            if (!getUntrackedFiles(commitID).isEmpty()) {
+            if (!getUntrackedFiles().isEmpty()) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 System.exit(0);
@@ -533,14 +548,14 @@ public class Repository {
 
     /** Checks base cases for merge. */
     public static void checkBaseCasesForMerge(String branchName) {
-        if (!join(BRANCH_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
+        if (!getUntrackedFiles().isEmpty()) {
+            System.out.println("There is an untracked file in the way; "
+                    + "delete it, or add and commit it first.");
             System.exit(0);
         }
 
-        if (!getUntrackedFiles(getHeadOfBranch(branchName)).isEmpty()) {
-            System.out.println("There is an untracked file in the way; "
-                    + "delete it, or add and commit it first.");
+        if (!join(BRANCH_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
 
@@ -743,7 +758,7 @@ public class Repository {
         // EC: fill in this function
         System.out.println("=== Untracked Files ===");
 
-        List<String> untracked = getUntrackedFiles(getHead());
+        List<String> untracked = getUntrackedFiles();
         Collections.sort(untracked);
 
         for (String f : untracked) {
