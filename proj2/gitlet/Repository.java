@@ -417,7 +417,11 @@ public class Repository {
         q.add(getHeadOfBranch(branch1));
         while (!q.isEmpty()) {
             commits.add(q.peek());
-            String ptr = readObject(join(COMMIT_DIR, q.poll()), Commit.class).getParent();
+            String ptr = readObject(join(COMMIT_DIR, q.peek()), Commit.class).getParent();
+            if (!ptr.isEmpty()) {
+                q.add(ptr);
+            }
+            ptr = readObject(join(COMMIT_DIR, q.poll()), Commit.class).getSecondParent();
             if (!ptr.isEmpty()) {
                 q.add(ptr);
             }
@@ -427,10 +431,14 @@ public class Repository {
         q2.add(getHeadOfBranch(branch2));
 
         while (!q2.isEmpty()) {
-            if (commits.contains(q.peek())) {
-                return q.peek();
+            if (commits.contains(q2.peek())) {
+                return q2.peek();
             }
-            String nxt = readObject(join(COMMIT_DIR, q2.poll()), Commit.class).getParent();
+            String nxt = readObject(join(COMMIT_DIR, q2.peek()), Commit.class).getParent();
+            if (!nxt.isEmpty()) {
+                q2.add(nxt);
+            }
+            nxt = readObject(join(COMMIT_DIR, q2.poll()), Commit.class).getSecondParent();
             if (!nxt.isEmpty()) {
                 q2.add(nxt);
             }
