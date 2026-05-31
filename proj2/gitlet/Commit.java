@@ -47,6 +47,19 @@ public class Commit implements Serializable {
         }
     }
 
+    public Commit(String message, String par, String par2) {
+        this.message = message;
+        this.date = new Date();
+        this.parent = par;
+        this.parent2 = par2;
+        if (par.equals("")) {
+            this.date = new Date(0);
+        } else {
+            Commit parentCommit = Repository.readCommitFromHash(par);
+            trackedFiles.putAll(parentCommit.getTrackedFiles());
+        }
+    }
+
     /** Adds a file into the commit. */
     public void addFile(String fileName) throws IOException {
         Blob b = new Blob(join(Repository.CWD, fileName));

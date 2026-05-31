@@ -195,6 +195,39 @@ public class Repository {
         setHeadOfBranch(fileName);
     }
 
+    public static void makeCommit(String msg, String secondParent) throws IOException {
+        Commit c = new Commit(msg, getHead(), secondParent);
+
+        List<String> filesToAdd = plainFilenamesIn(STAGEADD);
+        List<String> filesToRm = plainFilenamesIn(STAGERM);
+
+        if (!filesToAdd.isEmpty()) {
+            for (String fileName : filesToAdd) {
+                c.addFile(fileName);
+                join(STAGEADD, fileName).delete();
+            }
+        } else {
+            if (filesToRm.isEmpty()) {
+                System.out.println("No changes added to the commit.");
+                System.exit(0);
+            }
+        }
+
+        if (filesToRm != null) {
+            for (String fileName : filesToRm) {
+                c.rmFile(fileName);
+                join(STAGERM, fileName).delete();
+            }
+        }
+
+        String fileName = sha1(serialize(c));
+
+        File commitFile = join(COMMIT_DIR, fileName);
+        writeObject(commitFile, c);
+
+        setHeadOfBranch(fileName);
+    }
+
     /** Returns the commit with the given hash. */
     public static Commit readCommitFromHash(String hash) {
         return readObject(join(COMMIT_DIR, hash), Commit.class);
@@ -546,7 +579,8 @@ public class Repository {
         mergeSteps5(branchName, splitName);
         boolean b = mergeSteps8(branchName, splitName);
 
-        makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".");
+        makeCommit("Merged " + branchName + " into " + getHeadBranch() + ".",
+                getHeadOfBranch(branchName));
         if (b) {
             System.out.println("Encountered a merge conflict.");
         }

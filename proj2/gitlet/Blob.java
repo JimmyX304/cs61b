@@ -6,8 +6,9 @@ import java.io.Serializable;
 
 import static gitlet.Utils.*;
 
-/** The Blob class stores the text of a file. It is used to store
- * the contents of a file.
+/** Represents a gitlet blob object.
+ * It is used to store the contents of a file.
+ * @author Hanyuan Xu
  * */
 public class Blob implements Serializable {
 
