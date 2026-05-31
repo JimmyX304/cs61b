@@ -667,7 +667,7 @@ public class Repository {
 
         System.out.println("===");
         System.out.println("commit " + cID);
-        if (c.getSecondParent() != null) {
+        if (!c.getSecondParent().isEmpty()) {
             System.out.println("Merge: " + c.getParent().substring(0, 7) + " "
                                         + c.getSecondParent().substring(0, 7));
         }
