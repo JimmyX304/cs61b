@@ -13,8 +13,8 @@ import java.util.Random;
  */
 public class HexWorld {
 
-    private static final int WIDTH = 50;
-    private static final int HEIGHT = 50;
+    private static final int WIDTH = 30;
+    private static final int HEIGHT = 35;
     private static final Random RANDOM = new Random();
 
     /** Function to get a random tile. */
@@ -71,7 +71,29 @@ public class HexWorld {
         TETile[][] randomTiles = new TETile[WIDTH][HEIGHT];
         initializeTiles(randomTiles);
 
-        addHexagon(5, 10, 20, randomTiles);
+        addHexagon(3, 0, 8, randomTiles);
+        addHexagon(3, 0, 14, randomTiles);
+        addHexagon(3, 0, 20, randomTiles);
+
+        addHexagon(3, 5, 5, randomTiles);
+        addHexagon(3, 5, 11, randomTiles);
+        addHexagon(3, 5, 17, randomTiles);
+        addHexagon(3, 5, 23, randomTiles);
+
+        addHexagon(3, 10, 2, randomTiles);
+        addHexagon(3, 10, 8, randomTiles);
+        addHexagon(3, 10, 14, randomTiles);
+        addHexagon(3, 10, 20, randomTiles);
+        addHexagon(3, 10, 26, randomTiles);
+
+        addHexagon(3, 15, 5, randomTiles);
+        addHexagon(3, 15, 11, randomTiles);
+        addHexagon(3, 15, 17, randomTiles);
+        addHexagon(3, 15, 23, randomTiles);
+
+        addHexagon(3, 20, 8, randomTiles);
+        addHexagon(3, 20, 14, randomTiles);
+        addHexagon(3, 20, 20, randomTiles);
 
         ter.renderFrame(randomTiles);
     }
