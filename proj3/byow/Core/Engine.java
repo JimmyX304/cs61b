@@ -2,6 +2,11 @@ package byow.Core;
 
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import byow.TileEngine.Tileset;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -38,15 +43,118 @@ public class Engine {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] interactWithInputString(String input) {
-        // TODO: Fill out this method so that it run the engine using the input
-        // passed in as an argument, and return a 2D tile representation of the
-        // world that would have been drawn if the same inputs had been given
-        // to interactWithKeyboard().
-        //
-        // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
-        // that works for many different input types.
 
-        TETile[][] finalWorldFrame = null;
+        TETile[][] finalWorldFrame = newWorld();
+
+        String inputType = input.substring(0, 1).toLowerCase();
+        if (inputType.equals("n")) {
+
+            String seedAsString = "0";
+            for (int i = 1; i < input.length(); i++) {
+                String cur = input.substring(i, i + 1);
+                if (cur.toLowerCase().equals("s")) {
+                    break;
+                }
+                seedAsString += cur;
+            }
+
+            long seed = Long.parseLong(seedAsString);
+
+            finalWorldFrame = createWorldWithSeed(seed);
+
+        } else if (inputType.equals("l")) {
+
+        } else if (inputType.equals("q")) {
+
+        }
+
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(finalWorldFrame);
+
         return finalWorldFrame;
+    }
+
+    /** Generates a random world with the given seed. */
+    /* Idea:
+     *   Randomly generate rooms using the seed
+     *    - Use the seed to get the bottom-left corner
+     *    - Use the seed to get side lengths
+     *    - Check if there are any overlaps - if there are, then don't use this room
+     *   Then, connect these rooms using hallways.
+     * */
+    private TETile[][] createWorldWithSeed(long seed) {
+        TETile[][] world = newWorld();
+        Random RANDOM = new Random(seed);
+
+        List<Room> rooms = new ArrayList<>();
+        for (int roomID = 1; roomID <= 100; roomID++) {
+
+            int x, y, width, height;
+            x = RANDOM.nextInt(WIDTH);
+            y = RANDOM.nextInt(HEIGHT);
+            width = RANDOM.nextInt(8) + 2;
+            height = RANDOM.nextInt(8) + 1;
+
+            if (x + width + 1 >= WIDTH || y + height + 1 >= HEIGHT) {
+                continue;
+            }
+
+            Room newRoom = new Room(x, y, width, height);
+
+            boolean canAdd = true;
+            for (Room other : rooms) {
+                if (newRoom.intersect(other)) {
+                    canAdd = false;
+                    break;
+                }
+            }
+
+            if (canAdd) {
+                addRoom(newRoom, world);
+                rooms.add(newRoom);
+            }
+        }
+
+        addWalls(world);
+
+        return world;
+    }
+
+
+    /** Adds a room to the existing world. */
+    private void addRoom(Room r, TETile[][] world) {
+        for (int i = r.x + 1; i <= r.x + r.width; i++) {
+            for (int j = r.y + 1; j <= r.y + r.height; j++) {
+                world[i][j] = Tileset.FLOOR;
+            }
+        }
+    }
+
+    /** Adds walls to a world. */
+    private void addWalls(TETile[][] world) {
+        for (int i = 1; i < WIDTH - 1; i++) {
+            for (int j = 1; j < HEIGHT - 1; j++) {
+                if (world[i][j].equals(Tileset.FLOOR)) {
+                    for (int cx = -1; cx <= 1; cx++) {
+                        for (int cy = -1; cy <= 1; cy++) {
+                            if (world[i + cx][j + cy].equals(Tileset.NOTHING)) {
+                                world[i + cx][j + cy] = Tileset.WALL;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Makes a new world of nothing. */
+    private TETile[][] newWorld() {
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
+                world[i][j] = Tileset.NOTHING;
+            }
+        }
+        return world;
     }
 }
