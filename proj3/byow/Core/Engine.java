@@ -87,13 +87,12 @@ public class Engine {
         Random RANDOM = new Random(seed);
 
         List<Room> rooms = new ArrayList<>();
-        for (int roomID = 1; roomID <= 100; roomID++) {
+        for (int roomID = 1; roomID <= 40; roomID++) {
 
-            int x, y, width, height;
-            x = RANDOM.nextInt(WIDTH);
-            y = RANDOM.nextInt(HEIGHT);
-            width = RANDOM.nextInt(8) + 2;
-            height = RANDOM.nextInt(8) + 1;
+            int x = RANDOM.nextInt(WIDTH);
+            int y = RANDOM.nextInt(HEIGHT);
+            int width = RANDOM.nextInt(8) + 2;
+            int height = RANDOM.nextInt(8) + 1;
 
             if (x + width + 1 >= WIDTH || y + height + 1 >= HEIGHT) {
                 continue;
@@ -115,11 +114,32 @@ public class Engine {
             }
         }
 
+        for (int i = 0; i + 1 < rooms.size(); i++) {
+            connectRooms(rooms.get(i), rooms.get(i + 1), world);
+        }
+
         addWalls(world);
 
         return world;
     }
 
+    /** Connects two rooms. */
+    private void connectRooms(Room a, Room b, TETile[][] world) {
+        int x1 = a.x + a.width / 2 + 1;
+        int y1 = a.y + a.height / 2 + 1;
+
+        int x2 = b.x + b.width / 2 + 1;
+        int y2 = b.y + b.height / 2 + 1;
+
+        for (int x = Math.min(x1, x2); x <= Math.max(x2, x2); x++) {
+            world[x][y1] = Tileset.FLOOR;
+        }
+
+        for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+            world[x2][y] = Tileset.FLOOR;
+        }
+
+    }
 
     /** Adds a room to the existing world. */
     private void addRoom(Room r, TETile[][] world) {

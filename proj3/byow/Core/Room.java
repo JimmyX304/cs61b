@@ -19,7 +19,7 @@ public class Room {
         this.height = height;
     }
 
-    /** Returns if two rooms intersect. */
+    /** Returns whether two rooms intersect. */
     public boolean intersect(Room other) {
         if (this.x + this.width <= other.x || other.x + other.width <= this.x) {
             return false;
