@@ -68,8 +68,8 @@ public class Engine {
 
         }
 
-        ter.initialize(WIDTH, HEIGHT);
-        ter.renderFrame(finalWorldFrame);
+//        ter.initialize(WIDTH, HEIGHT);
+//        ter.renderFrame(finalWorldFrame);
 
         return finalWorldFrame;
     }
@@ -119,6 +119,7 @@ public class Engine {
         }
 
         addWalls(world);
+        addLockedDoor(world);
 
         return world;
     }
@@ -159,6 +160,33 @@ public class Engine {
                         for (int cy = -1; cy <= 1; cy++) {
                             if (world[i + cx][j + cy].equals(Tileset.NOTHING)) {
                                 world[i + cx][j + cy] = Tileset.WALL;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Adds a locked door. */
+    private void addLockedDoor(TETile[][] world) {
+        for (int y = 1; y < HEIGHT - 1; y++) {
+            for (int x = 1; x < WIDTH - 1; x++) {
+                if (world[x][y].equals(Tileset.WALL)) {
+                    for (int cx = -1; cx <= 1; cx++) {
+                        for (int cy = -1; cy <= 1; cy++) {
+                            int cntIsZero = 0;
+                            if (cx == 0) {
+                                cntIsZero++;
+                            }
+                            if (cy == 0) {
+                                cntIsZero++;
+                            }
+                            if (cntIsZero == 1) {
+                                if (world[x + cx][y + cy].equals(Tileset.FLOOR)) {
+                                    world[x][y] = Tileset.LOCKED_DOOR;
+                                    return;
+                                }
                             }
                         }
                     }
