@@ -8,12 +8,12 @@
 - lab6:                 64/64
 - lab7:                 64/64
 - lab8:                 64/64
-- lab12:                NA/64
+- lab12:                64/64
 - project0:             640/640
 - projcet1-checkpoint:  16/16
 - project1:             640/640
 - project1-EC:          32/32
 - project2-checkpoint:  16/16
 - project2:             1632/1600
-- project3-part1:       NA/100
+- project3-part1:       100/100
 - projcet3-part2:       NA/100
