@@ -3,7 +3,9 @@ package byow.Core;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
+import edu.princeton.cs.introcs.StdDraw;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,11 +16,43 @@ public class Engine {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
 
+    private int avatarX, avatarY;
+
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+
+        showHomeScreen();
+
+        TETile[][] world = null;
+
+        while (true) {
+
+            char c = getNextChar();
+
+            if (c == 'N') {
+
+                long seed = askForSeed();
+                world = createWorldWithSeed(seed);
+
+                ter.initialize(WIDTH, HEIGHT);
+                ter.renderFrame(world);
+            } else if (c == 'L') {
+
+            } else if (c == 'Q') {
+                StdDraw.clear(StdDraw.BLACK);
+            } else if (c == 'W') {
+                moveAvatar(0, 1, world);
+            } else if (c == 'A') {
+                moveAvatar(-1, 0, world);
+            } else if (c == 'S') {
+                moveAvatar(0, -1, world);
+            } else if (c == 'D') {
+                moveAvatar(1, 0, world);
+            }
+        }
     }
 
     /**
@@ -68,8 +102,8 @@ public class Engine {
 
         }
 
-//        ter.initialize(WIDTH, HEIGHT);
-//        ter.renderFrame(finalWorldFrame);
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(finalWorldFrame);
 
         return finalWorldFrame;
     }
@@ -119,7 +153,7 @@ public class Engine {
         }
 
         addWalls(world);
-        addLockedDoor(world);
+        addLockedDoorAndAvatar(world);
 
         return world;
     }
@@ -168,8 +202,26 @@ public class Engine {
         }
     }
 
+    /** Moves an avatar in the direction specified. */
+    private void moveAvatar(int cx, int cy, TETile[][] world) {
+        if (world == null) {
+            return;
+        }
+        int nx = avatarX + cx;
+        int ny = avatarY + cy;
+        if (world[nx][ny].equals(Tileset.FLOOR)) {
+            world[nx][ny] = Tileset.AVATAR;
+            world[avatarX][avatarY] = Tileset.FLOOR;
+            avatarX = nx;
+            avatarY = ny;
+        }
+
+        ter.renderFrame(world);
+    }
+
+
     /** Adds a locked door. */
-    private void addLockedDoor(TETile[][] world) {
+    private void addLockedDoorAndAvatar(TETile[][] world) {
         for (int y = 1; y < HEIGHT - 1; y++) {
             for (int x = 1; x < WIDTH - 1; x++) {
                 if (world[x][y].equals(Tileset.WALL)) {
@@ -184,7 +236,10 @@ public class Engine {
                             }
                             if (cntIsZero == 1) {
                                 if (world[x + cx][y + cy].equals(Tileset.FLOOR)) {
+                                    world[x + cx][y + cy] = Tileset.AVATAR;
                                     world[x][y] = Tileset.LOCKED_DOOR;
+                                    avatarX = x + cx;
+                                    avatarY = y + cy;
                                     return;
                                 }
                             }
@@ -204,5 +259,56 @@ public class Engine {
             }
         }
         return world;
+    }
+
+    /** Shows the home screen. */
+    private void showHomeScreen() {
+        StdDraw.setCanvasSize(this.WIDTH * 16, this.HEIGHT * 16);
+        StdDraw.setXscale(0, this.WIDTH);
+        StdDraw.setYscale(0, this.HEIGHT);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.enableDoubleBuffering();
+
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+
+        StdDraw.setFont(new Font("Arial", Font.BOLD, 40));
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 6, "CS61B: The Game");
+
+        StdDraw.setFont(new Font("Arial", Font.BOLD, 20));
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 - 3, "New Game (N)");
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 - 6, "Load Game (L)");
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 - 9, "Quit (Q)");
+
+        StdDraw.show();
+    }
+
+    private char getNextChar() {
+        while (!StdDraw.hasNextKeyTyped()) {
+            StdDraw.pause(10);
+        }
+        return Character.toUpperCase(StdDraw.nextKeyTyped());
+    }
+
+    private long askForSeed() {
+
+        StdDraw.clear(StdDraw.BLACK);
+        StdDraw.setFont(new Font("Arial", Font.BOLD, 40));
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 6, "Please enter a seed");
+        StdDraw.show();
+
+        StringBuilder seedString = new StringBuilder();
+        while (true) {
+            char c = getNextChar();
+            if (c == 'S') {
+                break;
+            }
+            seedString.append(c);
+            StdDraw.clear(StdDraw.BLACK);
+            StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 6, "Please enter a seed");
+            StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 3, seedString.toString());
+            StdDraw.show();
+        }
+        return Long.parseLong(seedString.toString());
     }
 }
