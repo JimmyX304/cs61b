@@ -19,7 +19,7 @@ public class Engine {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
     private String loadString = "";
-    private static final File saveFile = new File(".cs61bBYOWgamesave.txt");
+    private static final File SAVEFILE = new File(".cs61bBYOWgamesave.txt");
 
     private int avatarX, avatarY;
 
@@ -28,54 +28,40 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
-
         showHomeScreen();
-
         TETile[][] world = null;
-
         boolean preCharIsColon = false;
-
         while (true) {
-
             char c = getNextChar();
-
             if (c == ':') {
                 preCharIsColon = true;
             } else if (c != 'Q') {
                 preCharIsColon = false;
             }
-
             if (c == 'N') {
                 if (world != null) {
                     continue;
                 }
-
                 loadString = "N";
-
                 long seed = askForSeed();
                 loadString += seed;
                 loadString += 'S';
-
                 world = createWorldWithSeed(seed);
-
                 ter.initialize(WIDTH, HEIGHT);
                 ter.renderFrame(world);
             } else if (c == 'L') {
-
                 try {
-                    loadString = Files.readString(saveFile.toPath());
+                    loadString = Files.readString(SAVEFILE.toPath());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
                 world = interactWithInputString(loadString);
-
                 ter.initialize(WIDTH, HEIGHT);
                 ter.renderFrame(world);
             } else if (c == 'Q') {
                 if (preCharIsColon) {
                     try {
-                        Files.writeString(saveFile.toPath(), this.loadString);
+                        Files.writeString(SAVEFILE.toPath(), this.loadString);
                         return;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -83,7 +69,7 @@ public class Engine {
                 } else {
                     if (world == null) {
                         try {
-                            Files.writeString(saveFile.toPath(), this.loadString);
+                            Files.writeString(SAVEFILE.toPath(), this.loadString);
                             return;
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -172,7 +158,9 @@ public class Engine {
 
             } else if (inputType.equals("L")) {
                 try {
-                    finalWorldFrame = interactWithInputString(Files.readString(saveFile.toPath()) + input.substring(1));
+                    finalWorldFrame = interactWithInputString(
+                            Files.readString(SAVEFILE.toPath()) + input.substring(1)
+                    );
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -180,7 +168,7 @@ public class Engine {
             } else if (inputType.equals("Q")) {
                 if (pos > 0 && input.substring(pos - 1, pos).equals(":")) {
                     try {
-                        Files.writeString(saveFile.toPath(), this.loadString);
+                        Files.writeString(SAVEFILE.toPath(), this.loadString);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -230,15 +218,15 @@ public class Engine {
      * */
     private TETile[][] createWorldWithSeed(long seed) {
         TETile[][] world = newWorld();
-        Random RANDOM = new Random(seed);
+        Random newRandom = new Random(seed);
 
         List<Room> rooms = new ArrayList<>();
         for (int roomID = 1; roomID <= 40; roomID++) {
 
-            int x = RANDOM.nextInt(WIDTH);
-            int y = RANDOM.nextInt(HEIGHT);
-            int width = RANDOM.nextInt(8) + 2;
-            int height = RANDOM.nextInt(8) + 1;
+            int x = newRandom.nextInt(WIDTH);
+            int y = newRandom.nextInt(HEIGHT);
+            int width = newRandom.nextInt(8) + 2;
+            int height = newRandom.nextInt(8) + 1;
 
             if (x + width + 1 >= WIDTH || y + height + 1 >= HEIGHT) {
                 continue;
@@ -272,11 +260,11 @@ public class Engine {
 
     /** Connects two rooms. */
     private void connectRooms(Room a, Room b, TETile[][] world) {
-        int x1 = a.x + a.width / 2 + 1;
-        int y1 = a.y + a.height / 2 + 1;
+        int x1 = a.getX() + a.getWidth() / 2 + 1;
+        int y1 = a.getY() + a.getHeight() / 2 + 1;
 
-        int x2 = b.x + b.width / 2 + 1;
-        int y2 = b.y + b.height / 2 + 1;
+        int x2 = b.getX() + b.getWidth() / 2 + 1;
+        int y2 = b.getY() + b.getHeight() / 2 + 1;
 
         for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             world[x][y1] = Tileset.FLOOR;
@@ -289,8 +277,8 @@ public class Engine {
 
     /** Adds a room to the existing world. */
     private void addRoom(Room r, TETile[][] world) {
-        for (int i = r.x + 1; i <= r.x + r.width; i++) {
-            for (int j = r.y + 1; j <= r.y + r.height; j++) {
+        for (int i = r.getX() + 1; i <= r.getX() + r.getWidth(); i++) {
+            for (int j = r.getY() + 1; j <= r.getY() + r.getHeight(); j++) {
                 world[i][j] = Tileset.FLOOR;
             }
         }

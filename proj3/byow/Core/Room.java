@@ -7,10 +7,10 @@ package byow.Core;
  *   - The height
  * */
 public class Room {
-    public int x;
-    public int y;
-    public int width;
-    public int height;
+    private int x;
+    private int y;
+    private int width;
+    private int height;
 
     public Room(int x, int y, int width, int height) {
         this.x = x;
@@ -28,5 +28,21 @@ public class Room {
             return false;
         }
         return true;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 }
