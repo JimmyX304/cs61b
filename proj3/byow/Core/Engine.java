@@ -6,6 +6,9 @@ import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
 
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -15,6 +18,8 @@ public class Engine {
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
+    private String loadString = "";
+    private static final File saveFile = new File(".cs61bBYOWgamesave.txt");
 
     private int avatarX, avatarY;
 
@@ -28,29 +33,91 @@ public class Engine {
 
         TETile[][] world = null;
 
+        boolean preCharIsColon = false;
+
         while (true) {
 
             char c = getNextChar();
 
+            if (c == ':') {
+                preCharIsColon = true;
+            } else if (c != 'Q') {
+                preCharIsColon = false;
+            }
+
             if (c == 'N') {
+                if (world != null) {
+                    continue;
+                }
+
+                loadString = "N";
 
                 long seed = askForSeed();
+                loadString += seed;
+                loadString += 'S';
+
                 world = createWorldWithSeed(seed);
 
                 ter.initialize(WIDTH, HEIGHT);
                 ter.renderFrame(world);
             } else if (c == 'L') {
 
+                try {
+                    loadString = Files.readString(saveFile.toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                world = interactWithInputString(loadString);
+
+                ter.initialize(WIDTH, HEIGHT);
+                ter.renderFrame(world);
             } else if (c == 'Q') {
-                StdDraw.clear(StdDraw.BLACK);
+                if (preCharIsColon) {
+                    try {
+                        Files.writeString(saveFile.toPath(), this.loadString);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    if (world == null) {
+                        try {
+                            Files.writeString(saveFile.toPath(), this.loadString);
+                            return;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
             } else if (c == 'W') {
+                if (world == null) {
+                    continue;
+                }
+                loadString += 'W';
                 moveAvatar(0, 1, world);
+                ter.renderFrame(world);
             } else if (c == 'A') {
+                if (world == null) {
+                    continue;
+                }
+                loadString += 'A';
                 moveAvatar(-1, 0, world);
+                ter.renderFrame(world);
             } else if (c == 'S') {
+                if (world == null) {
+                    continue;
+                }
+                loadString += 'S';
                 moveAvatar(0, -1, world);
+                ter.renderFrame(world);
             } else if (c == 'D') {
+                if (world == null) {
+                    continue;
+                }
+                loadString += 'D';
                 moveAvatar(1, 0, world);
+                ter.renderFrame(world);
             }
         }
     }
@@ -78,32 +145,77 @@ public class Engine {
      */
     public TETile[][] interactWithInputString(String input) {
 
-        TETile[][] finalWorldFrame = newWorld();
+        TETile[][] finalWorldFrame = null;
 
-        String inputType = input.substring(0, 1).toLowerCase();
-        if (inputType.equals("n")) {
+        for (int pos = 0; pos < input.length(); pos++) {
 
-            String seedAsString = "0";
-            for (int i = 1; i < input.length(); i++) {
-                String cur = input.substring(i, i + 1);
-                if (cur.toLowerCase().equals("s")) {
-                    break;
+            String inputType = input.substring(pos, pos + 1).toUpperCase();
+
+            if (inputType.equals("N")) {
+                String seedAsString = "0";
+                pos++;
+                while (pos < input.length()) {
+                    String cur = input.substring(pos, pos + 1);
+                    if (cur.toUpperCase().equals("S")) {
+                        pos++;
+                        break;
+                    }
+                    seedAsString += cur;
+                    pos++;
                 }
-                seedAsString += cur;
+
+                loadString += "N" + seedAsString + "S";
+
+                long seed = Long.parseLong(seedAsString);
+
+                finalWorldFrame = createWorldWithSeed(seed);
+
+            } else if (inputType.equals("L")) {
+                try {
+                    finalWorldFrame = interactWithInputString(Files.readString(saveFile.toPath()) + input.substring(1));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                return finalWorldFrame;
+            } else if (inputType.equals("Q")) {
+                if (pos > 0 && input.substring(pos - 1, pos).equals(":")) {
+                    try {
+                        Files.writeString(saveFile.toPath(), this.loadString);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return finalWorldFrame;
+                }
+            } else if (inputType.equals("W")) {
+                if (finalWorldFrame == null) {
+                    continue;
+                }
+                loadString += 'W';
+                moveAvatar(0, 1, finalWorldFrame);
+
+            } else if (inputType.equals("A")) {
+                if (finalWorldFrame == null) {
+                    continue;
+                }
+                loadString += 'A';
+                moveAvatar(-1, 0, finalWorldFrame);
+            } else if (inputType.equals("S")) {
+                if (finalWorldFrame == null) {
+                    continue;
+                }
+                loadString += 'S';
+                moveAvatar(0, -1, finalWorldFrame);
+            } else if (inputType.equals("D")) {
+                if (finalWorldFrame == null) {
+                    continue;
+                }
+                loadString += 'D';
+                moveAvatar(1, 0, finalWorldFrame);
             }
-
-            long seed = Long.parseLong(seedAsString);
-
-            finalWorldFrame = createWorldWithSeed(seed);
-
-        } else if (inputType.equals("l")) {
-
-        } else if (inputType.equals("q")) {
-
         }
 
-        ter.initialize(WIDTH, HEIGHT);
-        ter.renderFrame(finalWorldFrame);
+//        ter.initialize(WIDTH, HEIGHT);
+//        ter.renderFrame(finalWorldFrame);
 
         return finalWorldFrame;
     }
@@ -166,14 +278,13 @@ public class Engine {
         int x2 = b.x + b.width / 2 + 1;
         int y2 = b.y + b.height / 2 + 1;
 
-        for (int x = Math.min(x1, x2); x <= Math.max(x2, x2); x++) {
+        for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             world[x][y1] = Tileset.FLOOR;
         }
 
         for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
             world[x2][y] = Tileset.FLOOR;
         }
-
     }
 
     /** Adds a room to the existing world. */
@@ -204,9 +315,6 @@ public class Engine {
 
     /** Moves an avatar in the direction specified. */
     private void moveAvatar(int cx, int cy, TETile[][] world) {
-        if (world == null) {
-            return;
-        }
         int nx = avatarX + cx;
         int ny = avatarY + cy;
         if (world[nx][ny].equals(Tileset.FLOOR)) {
@@ -215,8 +323,6 @@ public class Engine {
             avatarX = nx;
             avatarY = ny;
         }
-
-        ter.renderFrame(world);
     }
 
 
@@ -251,7 +357,7 @@ public class Engine {
     }
 
     /** Makes a new world of nothing. */
-    private TETile[][] newWorld() {
+    private static TETile[][] newWorld() {
         TETile[][] world = new TETile[WIDTH][HEIGHT];
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
@@ -273,7 +379,7 @@ public class Engine {
         StdDraw.setPenColor(Color.WHITE);
 
         StdDraw.setFont(new Font("Arial", Font.BOLD, 40));
-        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 6, "CS61B: The Game");
+        StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 + 6, "The Very Random Game");
 
         StdDraw.setFont(new Font("Arial", Font.BOLD, 20));
         StdDraw.text(this.WIDTH / 2.0, this.HEIGHT / 2.0 - 3, "New Game (N)");
