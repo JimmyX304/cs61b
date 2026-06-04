@@ -16,4 +16,4 @@
 - project2-checkpoint:  16/16
 - project2:             1632/1600
 - project3-part1:       100/100
-- projcet3-part2:       NA/100
+- projcet3-part2:       100/100
